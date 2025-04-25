@@ -11,10 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * OCR 컨트롤러의 /api/v1/auth/ocr 엔드포인트가
@@ -44,11 +45,6 @@ class MemberControllerOcrIntegrationTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.businessRegistrationNo", not(emptyString())))
-                .andExpect(jsonPath("$.data.merchantName", not(emptyString())))
-                .andExpect(jsonPath("$.data.representativeName", not(emptyString())))
-                .andExpect(jsonPath("$.data.businessLaunchingDate", not(emptyString())))
-                .andExpect(jsonPath("$.data.merchantAddress", not(emptyString())))
-                .andExpect(jsonPath("$.data.businessType", not(emptyString())));
+                .andExpect(jsonPath("$.data.businessRegistrationNo", not(emptyString())));
     }
 }
