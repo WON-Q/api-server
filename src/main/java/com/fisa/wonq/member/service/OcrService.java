@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
@@ -31,51 +32,84 @@ public class OcrService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * MultipartFile 로 받은 사업자등록증(PDF/Image)을 Naver Clova OCR API로 보내
-     * 추출된 텍스트를 OcrResponseDTO 로 반환합니다.
-     */
     public OcrResponseDTO extract(MultipartFile file) {
         try {
-            // 1) MultipartFile → 임시 File 로 저장
-            String ext = FilenameUtils.getExtension(file.getOriginalFilename());
-            File temp = File.createTempFile("ocr-", "." + ext);
+            String ext  = FilenameUtils.getExtension(file.getOriginalFilename());
+            File   temp = File.createTempFile("ocr-", "." + ext);
             file.transferTo(temp);
 
-            // 2) OCR API 호출
             List<String> texts = callOcrApi("POST", temp.getAbsolutePath(), ext);
-
-            // 추출된 텍스트 원본 로그
             log.info("OCR raw texts: {}", texts);
 
-            // 3) DTO 변환 (fields 순서 고정: 번호, 상호, 대표자, 개업일, 소재지, 업종)
+            String regNo    = findValueAfter(texts, "등록번호");
+
             OcrResponseDTO dto = OcrResponseDTO.builder()
-                    .businessRegistrationNo(get(texts, 0))
-                    .merchantName(get(texts, 1))
-                    .representativeName(get(texts, 2))
-                    .businessLaunchingDate(get(texts, 3))
-                    .merchantAddress(get(texts, 4))
-                    .businessType(get(texts, 5))
+                    .businessRegistrationNo(regNo)
+//                    .merchantName(merchant)
+//                    .representativeName(owner)
+//                    .businessLaunchingDate(openDate)
+//                    .merchantAddress(address)
                     .build();
 
-            // DTO로 매핑한 결과 로그
             log.info("OCR mapped DTO: {}", dto);
-
             return dto;
+
         } catch (Exception e) {
             log.error("OCR 처리 중 오류", e);
             throw new RuntimeException("OCR 처리에 실패했습니다.");
         }
     }
 
-    private String get(List<String> list, int idx) {
-        return (list.size() > idx) ? list.get(idx) : "";
+    /**
+     * "key:" 혹은 "key" 텍스트가 있는 인덱스를 찾고,
+     * 바로 다음이 ":" 이면 그 다음 값을, 아니면 바로 다음 값을 반환
+     */
+    private String findValueAfter(List<String> list, String key) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).contains(key)) {
+                int next = i + 1;
+                if (next < list.size() && ":".equals(list.get(next))) {
+                    next++;
+                }
+                return (next < list.size()) ? list.get(next) : "";
+            }
+        }
+        return "";
+    }
+
+    /**
+     * "개업연월일:" 텍스트를 찾고,
+     * 뒤따르는 [":"], year, "년", month, "월", day, "일" 패턴에서
+     * 숫자만 추출해 yyyy-MM-dd 로 포맷
+     */
+    private String parseDate(List<String> list, String key) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).contains(key)) {
+                int idx = i + 1;
+                // 콜론 건너뛰기
+                if (idx < list.size() && ":".equals(list.get(idx))) {
+                    idx++;
+                }
+                // 이제 idx: year, idx+1: "년", idx+2: month, idx+3: "월", idx+4: day, idx+5: "일"
+                if (idx + 5 < list.size()) {
+                    String year  = list.get(idx).replaceAll("\\D", "");
+                    String month = list.get(idx + 2).replaceAll("\\D", "");
+                    String day   = list.get(idx + 4).replaceAll("\\D", "");
+                    if (!year.isEmpty() && !month.isEmpty() && !day.isEmpty()) {
+                        return String.format("%s-%02d-%02d",
+                                year,
+                                Integer.parseInt(month),
+                                Integer.parseInt(day));
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     private List<String> callOcrApi(String method, String filePath, String ext) throws IOException {
         List<String> result = new ArrayList<>();
 
-        // 1) HttpURLConnection 세팅
         URL apiURL = new URL(url);
         HttpURLConnection con = (HttpURLConnection) apiURL.openConnection();
         con.setUseCaches(false);
@@ -88,24 +122,21 @@ public class OcrService {
         con.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
         con.setRequestProperty("X-OCR-SECRET", secretKey);
 
-        // 2) JSON part 생성
-        ObjectNode messageJson = objectMapper.createObjectNode();
-        messageJson.put("version", "V2");
-        messageJson.put("requestId", UUID.randomUUID().toString());
-        messageJson.put("timestamp", System.currentTimeMillis());
-        ObjectNode image = objectMapper.createObjectNode();
-        image.put("format", ext);
-        image.put("name", "image");
-        ArrayNode images = objectMapper.createArrayNode().add(image);
-        messageJson.set("images", images);
+        // JSON part
+        ObjectNode messageJson = objectMapper.createObjectNode()
+                .put("version", "V2")
+                .put("requestId", UUID.randomUUID().toString())
+                .put("timestamp", System.currentTimeMillis());
+        ObjectNode image = objectMapper.createObjectNode()
+                .put("format", ext)
+                .put("name", "image");
+        messageJson.set("images", objectMapper.createArrayNode().add(image));
 
-        // 3) 요청 전송
         con.connect();
         try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
             writeMultiPart(wr, messageJson.toString(), new File(filePath), boundary);
         }
 
-        // 4) 응답 수신
         int responseCode = con.getResponseCode();
         InputStream respStream = (responseCode == 200)
                 ? con.getInputStream()
@@ -118,9 +149,8 @@ public class OcrService {
             }
         }
 
-        // 5) JSON 파싱
-        JsonNode root = objectMapper.readTree(sb.toString());
-        JsonNode fields = root.path("images").get(0).path("fields");
+        JsonNode fields = objectMapper.readTree(sb.toString())
+                .path("images").get(0).path("fields");
         if (fields.isArray()) {
             for (JsonNode f : fields) {
                 result.add(f.path("inferText").asText());
@@ -130,22 +160,23 @@ public class OcrService {
     }
 
     private void writeMultiPart(OutputStream out, String jsonMessage, File file, String boundary) throws IOException {
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"), true);
-        // (1) JSON 파트
-        writer.append("--").append(boundary).append("\r\n");
-        writer.append("Content-Disposition: form-data; name=\"message\"\r\n\r\n");
-        writer.append(jsonMessage).append("\r\n").flush();
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true);
+        // JSON 파트
+        writer.append("--").append(boundary).append("\r\n")
+                .append("Content-Disposition: form-data; name=\"message\"\r\n\r\n")
+                .append(jsonMessage).append("\r\n").flush();
 
-        // (2) 파일 파트
+        // 파일 파트
         if (file.isFile()) {
-            writer.append("--").append(boundary).append("\r\n");
-            writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"")
-                    .append(file.getName()).append("\"\r\n");
-            writer.append("Content-Type: application/octet-stream\r\n\r\n").flush();
+            writer.append("--").append(boundary).append("\r\n")
+                    .append("Content-Disposition: form-data; name=\"file\"; filename=\"")
+                    .append(file.getName()).append("\"\r\n")
+                    .append("Content-Type: application/octet-stream\r\n\r\n")
+                    .flush();
 
             try (FileInputStream fis = new FileInputStream(file)) {
                 byte[] buf = new byte[8192];
-                int n;
+                int    n;
                 while ((n = fis.read(buf)) != -1) {
                     out.write(buf, 0, n);
                 }
@@ -155,3 +186,4 @@ public class OcrService {
         }
     }
 }
+
