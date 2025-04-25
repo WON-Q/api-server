@@ -1,4 +1,4 @@
-package com.fisa.wonq.global.security.config;
+package com.fisa.wonq.global.config;
 
 import com.fisa.wonq.global.security.resolver.CurrentAccountArgumentResolver;
 import lombok.RequiredArgsConstructor;
@@ -37,13 +37,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         return Arrays.asList(
                 "http://localhost:3000",
                 "https://localhost:3000",
-                "https://dev.suppin.store",
-                "https://api.suppin.store",
-                "https://suppin.store",
-                "http://192.168.200.120:3000",
-                "https://coherent-midge-probably.ngrok-free.app",
-                "https://suppin-web.vercel.app/",
-                "https://suppin-survey.vercel.app"
+                "https://dev.wonq.store",
+                "https://api.wonq.store",
+                "https://wonq.store",
+                "https://coherent-midge-probably.ngrok-free.app"
         ).toArray(String[]::new);
     }
 }
