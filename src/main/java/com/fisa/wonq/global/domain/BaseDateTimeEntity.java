@@ -1,4 +1,4 @@
-package com.fisa.wonq.global.config;
+package com.fisa.wonq.global.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
