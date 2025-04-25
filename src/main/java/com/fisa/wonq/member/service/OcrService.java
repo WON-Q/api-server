@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fisa.wonq.member.controller.dto.OcrResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -36,20 +37,19 @@ public class OcrService {
      */
     public OcrResponseDTO extract(MultipartFile file) {
         try {
-            // 1) 원본 파일명에서 확장자 추출
-            String original = file.getOriginalFilename();                      // ex. "biz.pdf"
-            String ext = StringUtils.getFilenameExtension(original);          // "pdf"
-            String suffix = (ext != null) ? "." + ext : "";                   // ".pdf" or ""
-
-            // 2) 임시 파일 생성 (접두사 "ocr-", 접미사 ".pdf")
-            File temp = File.createTempFile("ocr-", suffix);
+            // 1) MultipartFile → 임시 File 로 저장
+            String ext = FilenameUtils.getExtension(file.getOriginalFilename());
+            File temp = File.createTempFile("ocr-", "." + ext);
             file.transferTo(temp);
 
-            // 3) OCR 호출
+            // 2) OCR API 호출
             List<String> texts = callOcrApi("POST", temp.getAbsolutePath(), ext);
 
-            // 4) DTO 변환
-            return OcrResponseDTO.builder()
+            // 추출된 텍스트 원본 로그
+            log.info("OCR raw texts: {}", texts);
+
+            // 3) DTO 변환 (fields 순서 고정: 번호, 상호, 대표자, 개업일, 소재지, 업종)
+            OcrResponseDTO dto = OcrResponseDTO.builder()
                     .businessRegistrationNo(get(texts, 0))
                     .merchantName(get(texts, 1))
                     .representativeName(get(texts, 2))
@@ -57,6 +57,11 @@ public class OcrService {
                     .merchantAddress(get(texts, 4))
                     .businessType(get(texts, 5))
                     .build();
+
+            // DTO로 매핑한 결과 로그
+            log.info("OCR mapped DTO: {}", dto);
+
+            return dto;
         } catch (Exception e) {
             log.error("OCR 처리 중 오류", e);
             throw new RuntimeException("OCR 처리에 실패했습니다.");
