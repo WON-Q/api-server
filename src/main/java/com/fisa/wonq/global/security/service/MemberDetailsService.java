@@ -28,7 +28,7 @@ public class MemberDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        Member member = memberRepository.findByUserIdAndStatusNot(userId, MemberStatus.DELETED)
+        Member member = memberRepository.findByAccountIdAndStatusNot(userId, MemberStatus.DELETED)
                 .orElseThrow(() -> new SecurityException(MEMBER_NOT_FOUND));
 
         if (member.isDeleted()) {
@@ -41,8 +41,8 @@ public class MemberDetailsService implements UserDetailsService {
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
         return UserDetailsImpl.builder()
-                .id(member.getId())
-                .userId(member.getUserId())
+                .id(member.getMemberId())
+                .userId(member.getAccountId())
                 .password(member.getPassword())
                 .authorities(authorities)
                 .build();
