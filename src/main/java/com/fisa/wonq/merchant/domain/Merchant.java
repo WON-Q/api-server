@@ -45,7 +45,13 @@ public class Merchant extends BaseDateTimeEntity {
     private String merchantAddress;
 
     @Column
+    private String merchantAccountBankName;
+
+    @Column
     private String merchantAccount;
+
+    @Column
+    private String merchantAccountHolderName;
 
     @Lob
     private String merchantImg;

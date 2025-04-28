@@ -47,8 +47,14 @@ public class MemberRequestDTO {
         @Schema(description = "가맹점 주소", example = "서울특별시 강남구 테헤란로 123")
         private String merchantAddress;
 
+        @Schema(description = "대표계좌 은행명", example = "우리은행")
+        private String merchantAccountBankName;
+
         @Schema(description = "대표계좌번호", example = "123-456-78901234")
         private String merchantAccount;
+
+        @Schema(description = "예금주명", example = "김원큐")
+        private String merchantAccountHolderName;
 
         @Schema(description = "오픈 시간 (HH:mm)", example = "09:00")
         private String openTime;

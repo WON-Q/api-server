@@ -37,7 +37,9 @@ public class MemberService {
                 .merchantEmail(req.getMerchantEmail())
                 .businessLaunchingDate(req.getBusinessLaunchingDate())
                 .merchantAddress(req.getMerchantAddress())
+                .merchantAccountBankName(req.getMerchantAccountBankName())
                 .merchantAccount(req.getMerchantAccount())
+                .merchantAccountHolderName(req.getMerchantAccountHolderName())
                 .openTime(req.getOpenTime())
                 .closeTime(req.getCloseTime())
                 .build();
