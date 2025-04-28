@@ -106,7 +106,8 @@ public class WebSecurityConfig {
     private RequestMatcher[] requestHasRoleUser() {
         List<RequestMatcher> requestMatchers = List.of(
                 antMatcher("/api/v1/members/**"),
-                antMatcher(PATCH, "/api/v1/members")
+                antMatcher(PATCH, "/api/v1/members"),
+                antMatcher("/api/v1/merchant/**")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }

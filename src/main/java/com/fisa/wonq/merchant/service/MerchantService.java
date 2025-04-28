@@ -19,7 +19,7 @@ public class MerchantService {
     @Transactional(readOnly = true)
     public MerchantInfoResponse getMerchantInfo(Long memberId) {
         Merchant m = merchantRepository
-                .findByMember_MemberId(memberId)
+                .findByMemberMemberId(memberId)
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
 
         return MerchantInfoResponse.builder()

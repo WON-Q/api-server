@@ -31,6 +31,11 @@ public class DiningTable {
     @Column(nullable = false)
     private Integer tableNumber;
 
+    private Integer locationX;
+    private Integer locationY;
+    private Integer locationW;
+    private Integer locationH;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "merchant_id", nullable = false)
     private Merchant merchant;
