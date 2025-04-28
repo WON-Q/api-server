@@ -30,15 +30,10 @@ jobs:
       - name: Build Spring Boot Application
         run: ./gradlew bootJar
 
-      - name: Clean up old container and image
+      - name: Stop existing application
         run: |
-          docker rm won-q-server -f || true
-          docker rmi won-q-server || true
+          pkill -f 'java -jar' || true
 
-      - name: Build Docker Image
+      - name: Run Spring Boot Application
         run: |
-          docker build -t won-q-server .
-
-      - name: Run Container
-        run: |
-          docker run -d --name won-q-server -p 80:8080 won-q-server
+          nohup java -jar ./build/libs/*.jar > app.log 2>&1 &
