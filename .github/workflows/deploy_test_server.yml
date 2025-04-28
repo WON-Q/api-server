@@ -41,4 +41,4 @@ jobs:
 
       - name: Run Container
         run: |
-          docker run -d --name won-q-server -p 80:8080 --network container:db won-q-server
+          docker run -d --name won-q-server -p 80:8080 won-q-server
