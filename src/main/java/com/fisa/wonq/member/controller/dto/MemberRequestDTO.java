@@ -32,6 +32,9 @@ public class MemberRequestDTO {
         @Schema(description = "가맹점 이름", example = "원큐식당")
         private String merchantName;
 
+        @Schema(description = "소개 문구", example = "맛있는 원큐식당입니다.")
+        private String description;
+
         @Schema(description = "대표자명", example = "홍길동")
         private String merchantOwnerName;
 

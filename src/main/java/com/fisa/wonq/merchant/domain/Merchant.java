@@ -27,6 +27,9 @@ public class Merchant extends BaseDateTimeEntity {
     private String merchantName;
 
     @Column
+    private String description;
+
+    @Column
     private String merchantOwnerName;
 
     @Column

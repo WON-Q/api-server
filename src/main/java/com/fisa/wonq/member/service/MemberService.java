@@ -32,6 +32,7 @@ public class MemberService {
         Merchant merchant = Merchant.builder()
                 .businessRegistrationNo(req.getBusinessRegistrationNo())
                 .merchantName(req.getMerchantName())
+                .description(req.getDescription())
                 .merchantOwnerName(req.getMerchantOwnerName())
                 .merchantOwnerPhoneNo(req.getMerchantOwnerPhoneNo())
                 .merchantEmail(req.getMerchantEmail())
@@ -44,10 +45,10 @@ public class MemberService {
                 .closeTime(req.getCloseTime())
                 .build();
 
-        // 2) 양방향 연관관계 세팅
+        // 양방향 연관관계 세팅
         member.addMerchant(merchant);
 
-        // cascade ALL 세팅 덕분에 member만 save 해도 merchant가 함께 저장됩니다.
+        // cascade ALL -> merchant가 함께 저장
         memberRepository.save(member);
 
         return MemberResponseDTO.SignupResponse.builder()
