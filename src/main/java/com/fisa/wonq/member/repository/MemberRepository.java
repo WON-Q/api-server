@@ -10,5 +10,8 @@ import java.util.Optional;
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
-    Optional<Member> findByAccountIdAndStatusNot(String userId, MemberStatus status);
+    Optional<Member> findByAccountId(String accountId);
+
+    Optional<Member> findByAccountIdAndStatusNot(String accountId, MemberStatus status);
+
 }

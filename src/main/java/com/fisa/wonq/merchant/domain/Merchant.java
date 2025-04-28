@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "merchant")
-@Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -26,18 +26,35 @@ public class Merchant extends BaseDateTimeEntity {
     @Column(nullable = false)
     private String merchantName;
 
-    @Column(nullable = false)
+    @Column
     private String merchantOwnerName;
+
+    @Column
+    private String merchantOwnerPhoneNo;
+
+    @Column
+    private String merchantEmail;
+
+    @Column
+    private String businessRegistrationNo;
+
+    @Column
+    private String businessLaunchingDate;
+
+    @Column
+    private String merchantAddress;
+
+    @Column
+    private String merchantAccount;
 
     @Lob
     private String merchantImg;
 
-    private String phoneNo;
+    @Column
+    private String openTime;
 
-    @Column(nullable = false, unique = true)
-    private String businessRegistrationNo;
-
-    private String merchantAddress;
+    @Column
+    private String closeTime;
 
     @OneToOne
     @JoinColumn(name = "member_id", nullable = false)

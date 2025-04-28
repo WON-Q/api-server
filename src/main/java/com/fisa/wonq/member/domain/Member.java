@@ -11,8 +11,8 @@ import lombok.*;
  * 회원
  */
 @Entity
+@Data
 @Table(name = "member")
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -42,5 +42,32 @@ public class Member extends BaseDateTimeEntity {
 
     public void delete() {
         this.status = MemberStatus.DELETED;
+    }
+
+    /**
+     * 양방향 연관관계 편의 메서드
+     **/
+    public void addMerchant(Merchant m) {
+        this.merchant = m;
+        m.setMember(this);
+    }
+
+    /**
+     * 회원 가입 시 사용
+     */
+    public static Member of(String accountId, String encodedPassword) {
+        return Member.builder()
+                .accountId(accountId)
+                .password(encodedPassword)
+                .role(MemberRole.ROLE_USER)
+                .status(MemberStatus.ACTIVE)
+                .build();
+    }
+
+    /**
+     * 비밀번호 변경
+     **/
+    public void changePassword(String encodedNewPassword) {
+        this.password = encodedNewPassword;
     }
 }

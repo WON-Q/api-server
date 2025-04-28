@@ -22,10 +22,9 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.util.List;
 
+import static com.fisa.wonq.member.domain.enums.MemberRole.ROLE_USER;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
-import static com.fisa.wonq.member.domain.enums.MemberRole.ROLE_USER;
 
 @Configuration
 @EnableWebSecurity
@@ -121,10 +120,10 @@ public class WebSecurityConfig {
                 antMatcher("/swagger-ui/**"),
                 antMatcher("/actuator/**"),
                 antMatcher("/v3/api-docs/**"),
-                antMatcher("/api/v1/members/login/**"),
-                antMatcher("/api/v1/members/join/**"),
-                antMatcher("/api/v1/members/checkUserId"),
-                antMatcher("/api/v1/members/checkEmail")
+                antMatcher("/api/v1/auth/ocr"),
+                antMatcher("/api/v1/auth/register"),
+                antMatcher("/api/v1/auth/checkAccountId"),
+                antMatcher("/api/v1/auth/login")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }
