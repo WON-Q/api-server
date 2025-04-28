@@ -1,0 +1,44 @@
+name: Deploy won-q test server for Frontend developers
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set secret.yml file
+        run: |
+          echo "$SECRET_YML_CONTENT" > ./src/main/resources/secret.yml
+        env:
+          SECRET_YML_CONTENT: ${{ secrets.SECRET_YML_DEV }}
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build Spring Boot Application
+        run: ./gradlew bootJar
+
+      - name: Clean up old container and image
+        run: |
+          docker rm won-q-server -f || true
+          docker rmi won-q-server || true
+
+      - name: Build Docker Image
+        run: |
+          docker build -t won-q-server .
+
+      - name: Run Container
+        run: |
+          docker run -d --name won-q-server -p 80:8080 --network container:db won-q-server
