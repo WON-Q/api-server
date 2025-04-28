@@ -50,7 +50,7 @@ public class MerchantService {
         // 현재 로그인한 회원의 매장 찾기
         Merchant merchant = merchantRepository
                 .findByMemberMemberId(account.id())
-                .orElseThrow(() -> new IllegalArgumentException("해당 회원의 매장을 찾을 수 없습니다."));
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
 
         // 테이블 엔티티 생성
         DiningTable table = DiningTable.builder()
@@ -72,13 +72,54 @@ public class MerchantService {
 
     @Transactional(readOnly = true)
     public List<DiningTableDetailResponse> getDiningTablesWithOrders(Long memberId) {
-        var merchant = merchantRepository
+        Merchant merchant = merchantRepository
                 .findByMemberMemberId(memberId)
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
 
         return merchant.getTables().stream()
                 .map(table -> {
-                    var tableDto = DiningTableDetailResponse.builder()
+                    // 주문 DTO 生成
+                    List<DiningTableDetailResponse.OrderResponse> orders = table.getOrders().stream()
+                            .map(order -> {
+                                // 주문메뉴 DTO
+                                List<DiningTableDetailResponse.OrderMenuResponse> menus =
+                                        order.getOrderMenus().stream()
+                                                .map(om -> {
+                                                    var omDto = DiningTableDetailResponse.OrderMenuResponse.builder()
+                                                            .orderMenuId(om.getOrderMenuId())
+                                                            .menuId(om.getMenu().getMenuId())
+                                                            .menuName(om.getMenu().getName())
+                                                            .quantity(om.getQuantity())
+                                                            .unitPrice(om.getUnitPrice())
+                                                            .totalPrice(om.getTotalPrice())
+                                                            .build();
+                                                    // 옵션 DTO
+                                                    omDto.setOptions(om.getOrderMenuOptions().stream()
+                                                            .map(opt -> DiningTableDetailResponse.OrderMenuOptionResponse.builder()
+                                                                    .orderMenuOptionId(opt.getOrderMenuOptionId())
+                                                                    .menuOptionId(opt.getMenuOption().getMenuOptionId())
+                                                                    .optionName(opt.getMenuOption().getOptionName())
+                                                                    .optionPrice(opt.getOptionPrice())
+                                                                    .build())
+                                                            .toList()
+                                                    );
+                                                    return omDto;
+                                                })
+                                                .toList();
+
+                                // 주문 DTO
+                                return DiningTableDetailResponse.OrderResponse.builder()
+                                        .orderId(order.getOrderId())
+                                        .totalAmount(order.getTotalAmount())
+                                        .orderStatus(order.getOrderStatus())
+                                        .createdAt(order.getCreatedAt())
+                                        .orderMenus(menus)
+                                        .build();
+                            })
+                            .toList();
+
+                    // 테이블 DTO
+                    return DiningTableDetailResponse.builder()
                             .diningTableId(table.getDiningTableId())
                             .tableNumber(table.getTableNumber())
                             .capacity(table.getCapacity())
@@ -87,48 +128,10 @@ public class MerchantService {
                             .locationY(table.getLocationY())
                             .locationW(table.getLocationW())
                             .locationH(table.getLocationH())
+                            .orders(orders)
                             .build();
-
-                    var orders = table.getOrders().stream()
-                            .map(order -> {
-                                var orderDto = DiningTableDetailResponse.OrderResponse.builder()
-                                        .orderId(order.getOrderId())
-                                        .totalAmount(order.getTotalAmount())
-                                        .orderStatus(order.getOrderStatus())
-                                        .createdAt(order.getCreatedAt())
-                                        .build();
-
-                                var menus = order.getOrderMenus().stream()
-                                        .map(om -> {
-                                            var menu = om.getMenu();
-                                            var omDto = DiningTableDetailResponse.OrderMenuResponse.builder()
-                                                    .orderMenuId(om.getOrderMenuId())
-                                                    .menuId(menu.getMenuId())
-                                                    .menuName(menu.getName())
-                                                    .quantity(om.getQuantity())
-                                                    .unitPrice(om.getUnitPrice())
-                                                    .totalPrice(om.getTotalPrice())
-                                                    .build();
-
-                                            var opts = om.getOrderMenuOptions().stream()
-                                                    .map(opt -> DiningTableDetailResponse.OrderMenuOptionResponse.builder()
-                                                            .orderMenuOptionId(opt.getOrderMenuOptionId())
-                                                            .menuOptionId(opt.getMenuOption().getMenuOptionId())
-                                                            .optionName(opt.getMenuOption().getOptionName())
-                                                            .optionPrice(opt.getOptionPrice())
-                                                            .build()
-                                                    ).toList();
-
-                                            omDto.setOptions(opts);
-                                            return omDto;
-                                        }).toList();
-
-                                orderDto.setOrderMenus(menus);
-                                return orderDto;
-                            }).toList();
-
-                    tableDto.setOrders(orders);
-                    return tableDto;
-                }).toList();
+                })
+                .toList();
     }
+
 }

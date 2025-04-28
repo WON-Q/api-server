@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -40,8 +41,9 @@ public class DiningTableDetailResponse {
     @Schema(description = "높이", example = "50")
     private Integer locationH;
 
+    @Builder.Default
     @Schema(description = "이 테이블의 주문 내역")
-    private List<OrderResponse> orders;
+    private List<OrderResponse> orders = Collections.emptyList();
 
     @Getter
     @Setter
@@ -62,8 +64,9 @@ public class DiningTableDetailResponse {
         @Schema(description = "주문 생성 일시")
         private LocalDateTime createdAt;
 
+        @Builder.Default
         @Schema(description = "이 주문의 메뉴별 내역")
-        private List<OrderMenuResponse> orderMenus;
+        private List<OrderMenuResponse> orderMenus = Collections.emptyList();
     }
 
     @Getter
@@ -91,8 +94,9 @@ public class DiningTableDetailResponse {
         @Schema(description = "총 가격", example = "9000")
         private Integer totalPrice;
 
+        @Builder.Default
         @Schema(description = "선택된 옵션들")
-        private List<OrderMenuOptionResponse> options;
+        private List<OrderMenuOptionResponse> options = Collections.emptyList();
     }
 
     @Getter
