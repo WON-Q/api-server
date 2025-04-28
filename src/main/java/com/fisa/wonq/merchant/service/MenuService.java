@@ -1,0 +1,79 @@
+package com.fisa.wonq.merchant.service;
+
+import com.fisa.wonq.merchant.controller.dto.req.MenuRequest;
+import com.fisa.wonq.merchant.controller.dto.res.MenuResponse;
+import com.fisa.wonq.merchant.domain.Menu;
+import com.fisa.wonq.merchant.domain.MenuOption;
+import com.fisa.wonq.merchant.domain.MenuOptionGroup;
+import com.fisa.wonq.merchant.domain.Merchant;
+import com.fisa.wonq.merchant.exception.MerchantErrorCode;
+import com.fisa.wonq.merchant.exception.MerchantException;
+import com.fisa.wonq.merchant.repository.MenuRepository;
+import com.fisa.wonq.merchant.repository.MerchantRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class MenuService {
+
+    private final MerchantRepository merchantRepository;
+    private final MenuRepository menuRepository;
+
+    @Transactional
+    public MenuResponse createMenu(Long memberId, MenuRequest req) {
+        // 1) 내 매장 조회
+        Merchant merchant = merchantRepository.findByMemberMemberId(memberId)
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
+
+        // 2) Menu 엔티티 생성 (builder 로는 FK 없이 생성)
+        Menu menu = Menu.builder()
+                .name(req.getName())
+                .description(req.getDescription())
+                .category(req.getCategory())
+                .price(req.getPrice())
+                .menuImg(req.getMenuImgUrl())
+                .isAvailable(req.getIsAvailable())
+                .build();
+
+        // 3) 양방향 편의 메서드로 merchant ↔ menu 연결
+        merchant.addMenu(menu);
+
+        // 4) 옵션 그룹 + 옵션들 매핑
+        if (req.getOptionGroups() != null) {
+            int seq = 0;
+            for (MenuRequest.OptionGroupRequest g : req.getOptionGroups()) {
+                // 그룹 생성 (menu FK 없이)
+                MenuOptionGroup group = MenuOptionGroup.builder()
+                        .menuOptionGroupName(g.getGroupName())
+                        .displaySequence(seq)
+                        .isDefault(seq == 0)
+                        .build();
+                // 편의 메서드로 menu ↔ group 연결
+                menu.addOptionGroup(group);
+
+                // 옵션들 매핑
+                if (g.getOptions() != null) {
+                    for (MenuRequest.OptionRequest o : g.getOptions()) {
+                        MenuOption opt = MenuOption.builder()
+                                .optionName(o.getOptionName())
+                                .optionPrice(o.getOptionPrice())
+                                .build();
+                        // 편의 메서드로 group ↔ option 연결
+                        group.addOption(opt);
+                    }
+                }
+                seq++;
+            }
+        }
+
+        // 5) save 한 번으로 cascade ALL 된 group, option 모두 저장
+        Menu saved = menuRepository.save(menu);
+
+        // 6) 결과 반환
+        return MenuResponse.builder()
+                .menuId(saved.getMenuId())
+                .build();
+    }
+}
