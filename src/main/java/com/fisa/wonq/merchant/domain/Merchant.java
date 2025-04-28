@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,7 +14,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "merchant")
-@Data
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -69,9 +70,18 @@ public class Merchant extends BaseDateTimeEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL)
-    private List<DiningTable> tables;
+    @OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiningTable> tables = new ArrayList<>();
 
-    @OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL)
-    private List<Menu> menus;
+    @OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Menu> menus = new ArrayList<>();
+
+    /**
+     * 양방향 편의 메서드
+     */
+    public void addMenu(Menu menu) {
+        menus.add(menu);
+        menu.setMerchant(this);
+    }
 }
