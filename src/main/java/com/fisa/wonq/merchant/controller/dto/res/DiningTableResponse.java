@@ -1,5 +1,5 @@
 // src/main/java/com/fisa/wonq/dining/controller/dto/DiningTableResponse.java
-package com.fisa.wonq.merchant.controller.dto;
+package com.fisa.wonq.merchant.controller.dto.res;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;

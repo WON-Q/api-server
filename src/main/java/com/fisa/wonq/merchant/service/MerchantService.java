@@ -2,7 +2,11 @@ package com.fisa.wonq.merchant.service;
 
 
 import com.fisa.wonq.global.security.resolver.Account;
-import com.fisa.wonq.merchant.controller.dto.*;
+import com.fisa.wonq.merchant.controller.dto.req.DiningTableRequest;
+import com.fisa.wonq.merchant.controller.dto.res.DiningTableDetailResponse;
+import com.fisa.wonq.merchant.controller.dto.res.DiningTableResponse;
+import com.fisa.wonq.merchant.controller.dto.res.MerchantImageResponse;
+import com.fisa.wonq.merchant.controller.dto.res.MerchantInfoResponse;
 import com.fisa.wonq.merchant.domain.DiningTable;
 import com.fisa.wonq.merchant.domain.Merchant;
 import com.fisa.wonq.merchant.exception.MerchantErrorCode;

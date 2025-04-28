@@ -1,4 +1,4 @@
-package com.fisa.wonq.merchant.controller.dto;
+package com.fisa.wonq.merchant.controller.dto.req;
 
 import com.fisa.wonq.merchant.domain.enums.TableStatus;
 import io.swagger.v3.oas.annotations.media.Schema;

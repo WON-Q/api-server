@@ -1,4 +1,4 @@
-package com.fisa.wonq.merchant.controller.dto;
+package com.fisa.wonq.merchant.controller.dto.res;
 
 
 import com.fisa.wonq.merchant.domain.enums.TableStatus;
