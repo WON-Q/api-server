@@ -33,6 +33,7 @@ public class MemberService {
                 .businessRegistrationNo(req.getBusinessRegistrationNo())
                 .merchantName(req.getMerchantName())
                 .description(req.getDescription())
+                .merchantImg(req.getMerchantImg())
                 .merchantOwnerName(req.getMerchantOwnerName())
                 .merchantOwnerPhoneNo(req.getMerchantOwnerPhoneNo())
                 .merchantEmail(req.getMerchantEmail())

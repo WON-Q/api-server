@@ -4,16 +4,17 @@ import com.fisa.wonq.global.response.ApiResponse;
 import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
-import com.fisa.wonq.merchant.controller.dto.DiningTableDetailResponse;
-import com.fisa.wonq.merchant.controller.dto.DiningTableRequest;
-import com.fisa.wonq.merchant.controller.dto.DiningTableResponse;
-import com.fisa.wonq.merchant.controller.dto.MerchantInfoResponse;
+import com.fisa.wonq.merchant.controller.dto.*;
 import com.fisa.wonq.merchant.service.MerchantService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -24,7 +25,7 @@ public class MerchantController {
     private final MerchantService merchantService;
 
 
-    @GetMapping
+    @GetMapping("/info")
     @Operation(summary = "가맹점 기본 정보 조회",
             description = "현재 로그인된 회원의 가맹점 기본 정보를 반환합니다.")
     public ResponseEntity<ApiResponse<MerchantInfoResponse>> getMerchantInfo(
@@ -53,5 +54,20 @@ public class MerchantController {
     ) {
         List<DiningTableDetailResponse> dtos = merchantService.getDiningTablesWithOrders(account.id());
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dtos));
+    }
+
+    @PostMapping(
+            path = "/image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @Operation(summary = "가맹점 대표 이미지 업로드",
+            description = "로그인된 회원의 가맹점 대표 이미지를 S3에 업로드하고 URL을 반환합니다.")
+    public ResponseEntity<ApiResponse<MerchantImageResponse>> uploadImage(
+            @Parameter(description = "대표 이미지 파일", required = true)
+            @RequestPart("file") MultipartFile file
+    ) throws IOException {
+        MerchantImageResponse resp = merchantService.uploadMerchantImage(file);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
     }
 }

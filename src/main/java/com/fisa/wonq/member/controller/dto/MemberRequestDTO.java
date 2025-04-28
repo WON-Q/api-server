@@ -35,6 +35,9 @@ public class MemberRequestDTO {
         @Schema(description = "소개 문구", example = "맛있는 원큐식당입니다.")
         private String description;
 
+        @Schema(description = "가맹점 대표 이미지", example = "S3 url")
+        private String merchantImg;
+
         @Schema(description = "대표자명", example = "홍길동")
         private String merchantOwnerName;
 

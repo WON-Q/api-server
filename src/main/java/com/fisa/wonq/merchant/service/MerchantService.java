@@ -2,10 +2,7 @@ package com.fisa.wonq.merchant.service;
 
 
 import com.fisa.wonq.global.security.resolver.Account;
-import com.fisa.wonq.merchant.controller.dto.DiningTableDetailResponse;
-import com.fisa.wonq.merchant.controller.dto.DiningTableRequest;
-import com.fisa.wonq.merchant.controller.dto.DiningTableResponse;
-import com.fisa.wonq.merchant.controller.dto.MerchantInfoResponse;
+import com.fisa.wonq.merchant.controller.dto.*;
 import com.fisa.wonq.merchant.domain.DiningTable;
 import com.fisa.wonq.merchant.domain.Merchant;
 import com.fisa.wonq.merchant.exception.MerchantErrorCode;
@@ -15,7 +12,9 @@ import com.fisa.wonq.merchant.repository.MerchantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -24,6 +23,7 @@ public class MerchantService {
 
     private final MerchantRepository merchantRepository;
     private final DiningTableRepository diningTableRepository;
+    private final S3UploadService s3UploadService;
 
     @Transactional(readOnly = true)
     public MerchantInfoResponse getMerchantInfo(Long memberId) {
@@ -134,4 +134,11 @@ public class MerchantService {
                 .toList();
     }
 
+    @Transactional
+    public MerchantImageResponse uploadMerchantImage(MultipartFile file) throws IOException {
+
+        String imageUrl = s3UploadService.upload(file);
+
+        return new MerchantImageResponse(imageUrl);
+    }
 }
