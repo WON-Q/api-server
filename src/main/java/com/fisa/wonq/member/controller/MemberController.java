@@ -3,6 +3,8 @@ package com.fisa.wonq.member.controller;
 
 import com.fisa.wonq.global.response.ApiResponse;
 import com.fisa.wonq.global.response.ResponseCode;
+import com.fisa.wonq.member.controller.dto.MemberRequestDTO;
+import com.fisa.wonq.member.controller.dto.MemberResponseDTO;
 import com.fisa.wonq.member.controller.dto.OcrResponseDTO;
 import com.fisa.wonq.member.service.MemberService;
 import com.fisa.wonq.member.service.OcrService;
@@ -20,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MemberController {
 
     private final OcrService ocrService;
+    private final MemberService memberService;
 
     /**
      * OCR 기반 사업자등록증 정보 추출
@@ -39,4 +42,23 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dto));
     }
 
+    @Operation(summary = "점주 회원가입",
+            description = "OCR로 추출된 사업자등록번호와 기본 정보를 받아 회원가입합니다.")
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<MemberResponseDTO.SignupResponse>> signup(
+            @RequestBody MemberRequestDTO.SignupRequest req
+    ) {
+        MemberResponseDTO.SignupResponse dto = memberService.signup(req);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dto));
+    }
+
+    @Operation(summary = "아이디 중복 확인",
+            description = "accountId 의 사용 가능 여부를 반환합니다.")
+    @GetMapping("/checkAccountId")
+    public ResponseEntity<ApiResponse<Boolean>> checkAccountId(
+            @RequestParam String accountId
+    ) {
+        boolean available = memberService.isAccountIdAvailable(accountId);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, available));
+    }
 }

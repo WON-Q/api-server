@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "merchant")
-@Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
