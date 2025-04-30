@@ -23,11 +23,12 @@ public class MenuService {
 
     @Transactional
     public MenuResponse createMenu(Long memberId, MenuRequest req) {
-        // 1) 내 매장 조회
-        Merchant merchant = merchantRepository.findByMemberMemberId(memberId)
+        // 매장 조회
+        Merchant merchant = merchantRepository
+                .findByMemberMemberId(memberId)
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
 
-        // 2) Menu 엔티티 생성 (builder 로는 FK 없이 생성)
+        // Menu 엔티티 생성 (builder 로는 FK 없이 생성)
         Menu menu = Menu.builder()
                 .name(req.getName())
                 .description(req.getDescription())
@@ -37,10 +38,10 @@ public class MenuService {
                 .isAvailable(req.getIsAvailable())
                 .build();
 
-        // 3) 양방향 편의 메서드로 merchant ↔ menu 연결
+        // 양방향 편의 메서드로 merchant ↔ menu 연결
         merchant.addMenu(menu);
 
-        // 4) 옵션 그룹 + 옵션들 매핑
+        // 옵션 그룹 + 옵션들 매핑
         if (req.getOptionGroups() != null) {
             int seq = 0;
             for (MenuRequest.OptionGroupRequest g : req.getOptionGroups()) {

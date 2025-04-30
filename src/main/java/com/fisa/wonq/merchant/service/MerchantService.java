@@ -29,6 +29,7 @@ public class MerchantService {
     private final DiningTableRepository diningTableRepository;
     private final S3UploadService s3UploadService;
 
+    // 가맹점 정보 조회
     @Transactional(readOnly = true)
     public MerchantInfoResponse getMerchantInfo(Long memberId) {
         Merchant m = merchantRepository
@@ -49,6 +50,7 @@ public class MerchantService {
     }
 
 
+    // 테이블 추가
     @Transactional
     public DiningTableResponse addDiningTable(Account account, DiningTableRequest req) {
         // 현재 로그인한 회원의 매장 찾기
@@ -74,15 +76,16 @@ public class MerchantService {
         return new DiningTableResponse(table.getDiningTableId());
     }
 
+    // 주문 내역과 함께 테이블 조회
     @Transactional(readOnly = true)
     public List<DiningTableDetailResponse> getDiningTablesWithOrders(Long memberId) {
         Merchant merchant = merchantRepository
-                .findByMemberMemberId(memberId)
+                .findWithTablesAndOrdersByMemberMemberId(memberId)
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
 
         return merchant.getTables().stream()
                 .map(table -> {
-                    // 주문 DTO 生成
+                    // 주문 DTO
                     List<DiningTableDetailResponse.OrderResponse> orders = table.getOrders().stream()
                             .map(order -> {
                                 // 주문메뉴 DTO
@@ -138,6 +141,7 @@ public class MerchantService {
                 .toList();
     }
 
+    // 이미지 업로드
     @Transactional
     public MerchantImageResponse uploadMerchantImage(MultipartFile file) throws IOException {
 
