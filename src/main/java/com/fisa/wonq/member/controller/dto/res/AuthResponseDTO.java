@@ -1,4 +1,4 @@
-package com.fisa.wonq.member.controller.dto;
+package com.fisa.wonq.member.controller.dto.res;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

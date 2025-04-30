@@ -1,8 +1,8 @@
 // com.fisa.wonq.member.service.MemberService.java
 package com.fisa.wonq.member.service;
 
-import com.fisa.wonq.member.controller.dto.MemberRequestDTO.SignupRequest;
-import com.fisa.wonq.member.controller.dto.MemberResponseDTO;
+import com.fisa.wonq.member.controller.dto.req.MemberRequestDTO.SignupRequest;
+import com.fisa.wonq.member.controller.dto.res.MemberResponseDTO;
 import com.fisa.wonq.member.domain.Member;
 import com.fisa.wonq.member.repository.MemberRepository;
 import com.fisa.wonq.merchant.domain.Merchant;

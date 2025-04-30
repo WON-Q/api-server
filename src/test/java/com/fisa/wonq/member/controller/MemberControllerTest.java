@@ -1,8 +1,8 @@
 package com.fisa.wonq.member.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fisa.wonq.member.controller.dto.MemberRequestDTO;
-import com.fisa.wonq.member.controller.dto.MemberResponseDTO;
+import com.fisa.wonq.member.controller.dto.req.MemberRequestDTO;
+import com.fisa.wonq.member.controller.dto.res.MemberResponseDTO;
 import com.fisa.wonq.member.service.MemberService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

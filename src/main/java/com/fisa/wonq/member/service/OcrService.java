@@ -2,22 +2,22 @@ package com.fisa.wonq.member.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fisa.wonq.member.controller.dto.OcrResponseDTO;
+import com.fisa.wonq.member.controller.dto.res.OcrResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -34,14 +34,14 @@ public class OcrService {
 
     public OcrResponseDTO extract(MultipartFile file) {
         try {
-            String ext  = FilenameUtils.getExtension(file.getOriginalFilename());
-            File   temp = File.createTempFile("ocr-", "." + ext);
+            String ext = FilenameUtils.getExtension(file.getOriginalFilename());
+            File temp = File.createTempFile("ocr-", "." + ext);
             file.transferTo(temp);
 
             List<String> texts = callOcrApi("POST", temp.getAbsolutePath(), ext);
             log.info("OCR raw texts: {}", texts);
 
-            String regNo    = findValueAfter(texts, "등록번호");
+            String regNo = findValueAfter(texts, "등록번호");
 
             OcrResponseDTO dto = OcrResponseDTO.builder()
                     .businessRegistrationNo(regNo)
@@ -92,9 +92,9 @@ public class OcrService {
                 }
                 // 이제 idx: year, idx+1: "년", idx+2: month, idx+3: "월", idx+4: day, idx+5: "일"
                 if (idx + 5 < list.size()) {
-                    String year  = list.get(idx).replaceAll("\\D", "");
+                    String year = list.get(idx).replaceAll("\\D", "");
                     String month = list.get(idx + 2).replaceAll("\\D", "");
-                    String day   = list.get(idx + 4).replaceAll("\\D", "");
+                    String day = list.get(idx + 4).replaceAll("\\D", "");
                     if (!year.isEmpty() && !month.isEmpty() && !day.isEmpty()) {
                         return String.format("%s-%02d-%02d",
                                 year,
@@ -176,7 +176,7 @@ public class OcrService {
 
             try (FileInputStream fis = new FileInputStream(file)) {
                 byte[] buf = new byte[8192];
-                int    n;
+                int n;
                 while ((n = fis.read(buf)) != -1) {
                     out.write(buf, 0, n);
                 }
