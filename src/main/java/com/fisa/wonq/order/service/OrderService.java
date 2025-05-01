@@ -21,13 +21,14 @@ import com.fisa.wonq.order.domain.PaymentResult;
 import com.fisa.wonq.order.domain.enums.OrderMenuStatus;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -119,67 +120,70 @@ public class OrderService {
      * 해당 일자(00:00~23:59:59) 주문 조회
      */
     @Transactional(readOnly = true)
-    public List<OrderDetailResponse> getDailyOrders(Long memberId, LocalDate date) {
+    public Page<OrderDetailResponse> getDailyOrders(
+            Long memberId,
+            LocalDate date,
+            Pageable pageable
+    ) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.plusDays(1).atStartOfDay().minusNanos(1);
 
-        List<Order> orders = orderRepo.findByMerchantAndCreatedAtBetween(memberId, start, end);
-        return toDtoList(orders);
+        return orderRepo
+                .findByMerchantAndCreatedAtBetween(memberId, start, end, pageable)
+                .map(this::toDto);
     }
 
     /**
      * 해당 연·월(1일 00:00 ~ 말일 23:59:59) 주문 조회
      */
     @Transactional(readOnly = true)
-    public List<OrderDetailResponse> getMonthlyOrders(Long memberId, int year, int month) {
+    public Page<OrderDetailResponse> getMonthlyOrders(
+            Long memberId,
+            int year,
+            int month,
+            Pageable pageable
+    ) {
         LocalDate firstDay = LocalDate.of(year, month, 1);
         LocalDateTime start = firstDay.atStartOfDay();
         LocalDateTime end = firstDay.plusMonths(1).atStartOfDay().minusNanos(1);
 
-        List<Order> orders = orderRepo.findByMerchantAndCreatedAtBetween(memberId, start, end);
-        return toDtoList(orders);
+        return orderRepo
+                .findByMerchantAndCreatedAtBetween(memberId, start, end, pageable)
+                .map(this::toDto);
     }
 
-    private List<OrderDetailResponse> toDtoList(List<Order> orders) {
-        return orders.stream()
-                .map(order -> {
-                    List<OrderDetailResponse.OrderMenuResponse> menus = order.getOrderMenus().stream()
-                            .map(om -> {
-                                List<OrderDetailResponse.OrderMenuOptionResponse> opts =
-                                        om.getOrderMenuOptions().stream()
-                                                .map(o -> OrderDetailResponse.OrderMenuOptionResponse.builder()
-                                                        .orderMenuOptionId(o.getOrderMenuOptionId())
-                                                        .menuOptionId(o.getMenuOption().getMenuOptionId())
-                                                        .optionName(o.getMenuOption().getOptionName())
-                                                        .optionPrice(o.getOptionPrice())
-                                                        .build())
-                                                .toList();
+    private OrderDetailResponse toDto(Order order) {
+        var menus = order.getOrderMenus().stream().map(om -> {
+            var opts = om.getOrderMenuOptions().stream()
+                    .map(o -> OrderDetailResponse.OrderMenuOptionResponse.builder()
+                            .orderMenuOptionId(o.getOrderMenuOptionId())
+                            .menuOptionId(o.getMenuOption().getMenuOptionId())
+                            .optionName(o.getMenuOption().getOptionName())
+                            .optionPrice(o.getOptionPrice())
+                            .build())
+                    .toList();
+            return OrderDetailResponse.OrderMenuResponse.builder()
+                    .orderMenuId(om.getOrderMenuId())
+                    .menuId(om.getMenu().getMenuId())
+                    .menuName(om.getMenu().getName())
+                    .quantity(om.getQuantity())
+                    .unitPrice(om.getUnitPrice())
+                    .totalPrice(om.getTotalPrice())
+                    .status(om.getStatus())
+                    .options(opts)
+                    .build();
+        }).toList();
 
-                                return OrderDetailResponse.OrderMenuResponse.builder()
-                                        .orderMenuId(om.getOrderMenuId())
-                                        .menuId(om.getMenu().getMenuId())
-                                        .menuName(om.getMenu().getName())
-                                        .quantity(om.getQuantity())
-                                        .unitPrice(om.getUnitPrice())
-                                        .totalPrice(om.getTotalPrice())
-                                        .status(om.getStatus())  // ORDERED or SERVED
-                                        .options(opts)
-                                        .build();
-                            })
-                            .toList();
-
-                    return OrderDetailResponse.builder()
-                            .orderCode(order.getOrderCode())
-                            .tableNumber(order.getDiningTable().getTableNumber())
-                            .totalAmount(order.getTotalAmount())
-                            .orderStatus(order.getOrderStatus())
-                            .paymentStatus(order.getPaymentStatus())
-                            .paymentMethod(order.getPaymentMethod())
-                            .paidAt(order.getPaidAt())
-                            .createdAt(order.getCreatedAt())
-                            .menus(menus)
-                            .build();
-                })
-                .toList();
+        return OrderDetailResponse.builder()
+                .orderCode(order.getOrderCode())
+                .tableNumber(order.getDiningTable().getTableNumber())
+                .totalAmount(order.getTotalAmount())
+                .orderStatus(order.getOrderStatus())
+                .paymentStatus(order.getPaymentStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .paidAt(order.getPaidAt())
+                .createdAt(order.getCreatedAt())
+                .menus(menus)
+                .build();
     }
 }

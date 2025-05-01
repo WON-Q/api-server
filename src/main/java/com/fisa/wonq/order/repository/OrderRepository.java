@@ -1,12 +1,13 @@
 package com.fisa.wonq.order.repository;
 
 import com.fisa.wonq.order.domain.Order;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -22,13 +23,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "orderMenus.orderMenuOptions.menuOption",
             "diningTable"
     })
-    List<Order> findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetween(
+    Page<Order> findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetween(
             Long memberId,
             LocalDateTime from,
-            LocalDateTime to
+            LocalDateTime to,
+            Pageable pageable
     );
 
-    default List<Order> findByMerchantAndCreatedAtBetween(Long memberId, LocalDateTime from, LocalDateTime to) {
-        return findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetween(memberId, from, to);
+    default Page<Order> findByMerchantAndCreatedAtBetween(
+            Long memberId,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable
+    ) {
+        return findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetween(memberId, from, to, pageable);
     }
 }

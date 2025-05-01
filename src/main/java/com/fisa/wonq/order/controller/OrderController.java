@@ -10,12 +10,15 @@ import com.fisa.wonq.order.controller.dto.res.OrderResponse;
 import com.fisa.wonq.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -34,32 +37,32 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
     }
 
-    /**
-     * 일별 주문 내역 조회
-     */
     @GetMapping("/daily")
-    @Operation(summary = "일별 주문 내역 조회",
-            description = "date(yyyy-MM-dd) 파라미터로 지정한 날짜에 발생한 주문 내역을 반환합니다.")
-    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> listDailyOrders(
+    @Operation(summary = "일별 주문 내역 조회 (페이징)",
+            description = "date(yyyy-MM-dd), page, size, sort 파라미터로 페이징된 결과를 반환합니다. " +
+                    "\n\n [요청 URL 예시] /api/v1/merchant/orders/daily?date=2025-05-01&page=0&size=10&sort=createdAt,desc")
+    public ResponseEntity<ApiResponse<Page<OrderDetailResponse>>> listDailyOrders(
             @CurrentAccount Account account,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        List<OrderDetailResponse> dtos = orderService.getDailyOrders(account.id(), date);
-        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dtos));
+        Page<OrderDetailResponse> page = orderService.getDailyOrders(account.id(), date, pageable);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, page));
     }
 
-    /**
-     * 월별 주문 내역 조회
-     */
     @GetMapping("/monthly")
-    @Operation(summary = "월별 주문 내역 조회",
-            description = "year, month 파라미터로 지정한 연·월에 발생한 주문 내역을 반환합니다.")
-    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> listMonthlyOrders(
+    @Operation(summary = "월별 주문 내역 조회 (페이징)",
+            description = "year, month, page, size, sort 파라미터로 페이징된 결과를 반환합니다. " +
+                    "\n\n [요청 URL 예시] /api/v1/merchant/orders/monthly?year=2025&month=5&page=0&size=10")
+    public ResponseEntity<ApiResponse<Page<OrderDetailResponse>>> listMonthlyOrders(
             @CurrentAccount Account account,
             @RequestParam int year,
-            @RequestParam int month
+            @RequestParam int month,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        List<OrderDetailResponse> dtos = orderService.getMonthlyOrders(account.id(), year, month);
-        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dtos));
+        Page<OrderDetailResponse> page = orderService.getMonthlyOrders(account.id(), year, month, pageable);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, page));
     }
 }
