@@ -42,4 +42,9 @@ public class DiningTable {
 
     @OneToMany(mappedBy = "diningTable", cascade = CascadeType.ALL)
     private List<Order> orders;
+
+    // 테이블 상태 변경
+    public void changeStatus(TableStatus newStatus) {
+        this.status = newStatus;
+    }
 }

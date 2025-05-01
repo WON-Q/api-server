@@ -5,10 +5,8 @@ import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
 import com.fisa.wonq.merchant.controller.dto.req.DiningTableRequest;
-import com.fisa.wonq.merchant.controller.dto.res.DiningTableDetailResponse;
-import com.fisa.wonq.merchant.controller.dto.res.DiningTableResponse;
-import com.fisa.wonq.merchant.controller.dto.res.MerchantImageResponse;
-import com.fisa.wonq.merchant.controller.dto.res.MerchantInfoResponse;
+import com.fisa.wonq.merchant.controller.dto.req.DiningTableStatusRequest;
+import com.fisa.wonq.merchant.controller.dto.res.*;
 import com.fisa.wonq.merchant.service.MerchantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -72,6 +70,20 @@ public class MerchantController {
             @RequestPart("file") MultipartFile file
     ) throws IOException {
         MerchantImageResponse resp = merchantService.uploadMerchantImage(file);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
+    }
+
+    @PutMapping("/tables/{tableId}/status")
+    @Operation(summary = "테이블 상태 초기화(READY 상태로)",
+            description = "손님이 나간 후 IN_PROGRESS였던 테이블을 READY 상태로 변경합니다.")
+    public ResponseEntity<ApiResponse<DiningTableStatusResponse>> resetTable(
+            @CurrentAccount Account account,
+            @PathVariable Long tableId,
+            @RequestBody DiningTableStatusRequest req
+    ) {
+        DiningTableStatusResponse resp = merchantService.resetTableStatus(
+                account.id(), tableId, req
+        );
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
     }
 }
