@@ -17,8 +17,6 @@ import com.fisa.wonq.order.domain.Order;
 import com.fisa.wonq.order.domain.OrderMenu;
 import com.fisa.wonq.order.domain.OrderMenuOption;
 import com.fisa.wonq.order.domain.PaymentResult;
-import com.fisa.wonq.order.domain.enums.OrderStatus;
-import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -80,7 +78,7 @@ public class OrderService {
         // 5. 메뉴별 OrderMenu, OrderMenuOption 생성
         for (var m : req.getMenus()) {
             Menu menu = menuRepo.findById(m.getMenuId())
-                    .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_NOT_FOUND);
+                    .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_NOT_FOUND));
 
             OrderMenu om = OrderMenu.builder()
                     .menu(menu)
@@ -92,7 +90,7 @@ public class OrderService {
             if (m.getOptionIds() != null) {
                 for (Long optId : m.getOptionIds()) {
                     MenuOption mo = menuOptionRepo.findById(optId)
-                            .orElseThrow(() -> new MerchantException(MerchantErrorCode.OPTION_NOT_FOUND);
+                            .orElseThrow(() -> new MerchantException(MerchantErrorCode.OPTION_NOT_FOUND));
                     OrderMenuOption omo = OrderMenuOption.builder()
                             .menuOption(mo)
                             .optionPrice(mo.getOptionPrice())
