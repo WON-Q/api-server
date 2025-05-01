@@ -65,7 +65,7 @@ public class MerchantController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @Operation(summary = "대표 이미지 업로드(가맹점 대표 이미지, 메뉴 대표 이미지",
+    @Operation(summary = "대표 이미지 업로드(가맹점 대표 이미지, 메뉴 대표 이미지)",
             description = "로그인된 회원의 가맹점 대표 이미지를 S3에 업로드하고 URL을 반환합니다.")
     public ResponseEntity<ApiResponse<MerchantImageResponse>> uploadImage(
             @Parameter(description = "대표 이미지 파일", required = true)

@@ -1,6 +1,7 @@
 package com.fisa.wonq.merchant.service;
 
 import com.fisa.wonq.merchant.controller.dto.req.MenuRequest;
+import com.fisa.wonq.merchant.controller.dto.res.MenuDetailResponse;
 import com.fisa.wonq.merchant.controller.dto.res.MenuResponse;
 import com.fisa.wonq.merchant.domain.Menu;
 import com.fisa.wonq.merchant.domain.MenuOption;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class MenuService {
@@ -21,6 +24,7 @@ public class MenuService {
     private final MerchantRepository merchantRepository;
     private final MenuRepository menuRepository;
 
+    // 메뉴 등록 및 추가
     @Transactional
     public MenuResponse createMenu(Long memberId, MenuRequest req) {
         // 매장 조회
@@ -76,5 +80,43 @@ public class MenuService {
         return MenuResponse.builder()
                 .menuId(saved.getMenuId())
                 .build();
+    }
+
+    // 매장 내 전체 메뉴 조회
+    @Transactional(readOnly = true)
+    public List<MenuDetailResponse> getMenusWithOptionsByMerchantId(Long merchantId) {
+        Merchant merchant = merchantRepository
+                .findWithMenusByMerchantId(merchantId)
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
+
+        return merchant.getMenus().stream()
+                .map(menu -> {
+                    var groups = menu.getOptionGroups().stream()
+                            .map(g -> MenuDetailResponse.OptionGroup.builder()
+                                    .groupId(g.getMenuOptionGroupId())
+                                    .groupName(g.getMenuOptionGroupName())
+                                    .displaySequence(g.getDisplaySequence())
+                                    .isDefault(g.getIsDefault())
+                                    .options(g.getOptions().stream()
+                                            .map(o -> MenuDetailResponse.Option.builder()
+                                                    .optionId(o.getMenuOptionId())
+                                                    .optionName(o.getOptionName())
+                                                    .optionPrice(o.getOptionPrice())
+                                                    .build())
+                                            .toList())
+                                    .build())
+                            .toList();
+
+                    return MenuDetailResponse.builder()
+                            .menuId(menu.getMenuId())
+                            .name(menu.getName())
+                            .description(menu.getDescription())
+                            .category(menu.getCategory())
+                            .price(menu.getPrice())
+                            .menuImgUrl(menu.getMenuImg())
+                            .isAvailable(menu.getIsAvailable())
+                            .optionGroups(groups)
+                            .build();
+                }).toList();
     }
 }
