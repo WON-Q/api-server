@@ -3,12 +3,12 @@ package com.fisa.wonq.merchant.controller.dto.res;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-@Schema(description = "가맹점 기본 정보 조회 응답 DTO")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "가맹점 기본 정보 조회 응답 DTO")
 public class MerchantInfoResponse {
     @Schema(description = "매장 이름", example = "원큐식당")
     private String merchantName;
