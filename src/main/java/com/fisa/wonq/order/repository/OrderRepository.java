@@ -23,19 +23,28 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "orderMenus.orderMenuOptions.menuOption",
             "diningTable"
     })
-    Page<Order> findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetween(
+    Page<Order> findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetweenAndTotalAmountBetween(
             Long memberId,
             LocalDateTime from,
             LocalDateTime to,
+            Integer minAmount,
+            Integer maxAmount,
             Pageable pageable
     );
 
-    default Page<Order> findByMerchantAndCreatedAtBetween(
+    default Page<Order> findByMerchantAndCreatedAtBetweenAndAmountRange(
             Long memberId,
             LocalDateTime from,
             LocalDateTime to,
+            Integer minAmount,
+            Integer maxAmount,
             Pageable pageable
     ) {
-        return findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetween(memberId, from, to, pageable);
+        // null 처리: minAmount가 없으면 0, maxAmount가 없으면 Integer.MAX_VALUE
+        int min = minAmount != null ? minAmount : 0;
+        int max = maxAmount != null ? maxAmount : Integer.MAX_VALUE;
+        return findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetweenAndTotalAmountBetween(
+                memberId, from, to, min, max, pageable
+        );
     }
 }

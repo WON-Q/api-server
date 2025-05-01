@@ -38,31 +38,38 @@ public class OrderController {
     }
 
     @GetMapping("/daily")
-    @Operation(summary = "일별 주문 내역 조회 (페이징)",
-            description = "date(yyyy-MM-dd), page, size, sort 파라미터로 페이징된 결과를 반환합니다. " +
-                    "\n\n [요청 URL 예시] /api/v1/merchant/orders/daily?date=2025-05-01&page=0&size=10&sort=createdAt,desc")
+    @Operation(summary = "일별 주문 내역 조회 (페이징 + 금액 필터)",
+            description = "date(yyyy-MM-dd), optional minAmount, maxAmount, page, size, sort 파라미터로 페이징된 결과를 반환합니다." +
+                    "\n\n [요청 URL 예시] /api/v1/merchant/orders/daily?date=2025-05-01&minAmount=10000&maxAmount=50000&page=0&size=10&sort=createdAt,desc")
     public ResponseEntity<ApiResponse<Page<OrderDetailResponse>>> listDailyOrders(
             @CurrentAccount Account account,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Integer minAmount,
+            @RequestParam(required = false) Integer maxAmount,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Page<OrderDetailResponse> page = orderService.getDailyOrders(account.id(), date, pageable);
+        Page<OrderDetailResponse> page = orderService
+                .getDailyOrders(account.id(), date, minAmount, maxAmount, pageable);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, page));
     }
 
     @GetMapping("/monthly")
-    @Operation(summary = "월별 주문 내역 조회 (페이징)",
-            description = "year, month, page, size, sort 파라미터로 페이징된 결과를 반환합니다. " +
-                    "\n\n [요청 URL 예시] /api/v1/merchant/orders/monthly?year=2025&month=5&page=0&size=10")
+    @Operation(summary = "월별 주문 내역 조회 (페이징 + 금액 필터)",
+            description = "year, month, optional minAmount, maxAmount, page, size 파라미터로 페이징된 결과를 반환합니다." +
+                    "\n\n [요청 URL 예시] /api/v1/merchant/orders/monthly?year=2025&month=5&minAmount=10000&maxAmount=50000&page=1&size=20&sort=totalAmount,asc")
     public ResponseEntity<ApiResponse<Page<OrderDetailResponse>>> listMonthlyOrders(
             @CurrentAccount Account account,
             @RequestParam int year,
             @RequestParam int month,
+            @RequestParam(required = false) Integer minAmount,
+            @RequestParam(required = false) Integer maxAmount,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Page<OrderDetailResponse> page = orderService.getMonthlyOrders(account.id(), year, month, pageable);
+        Page<OrderDetailResponse> page = orderService
+                .getMonthlyOrders(account.id(), year, month, minAmount, maxAmount, pageable);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, page));
     }
 }
+

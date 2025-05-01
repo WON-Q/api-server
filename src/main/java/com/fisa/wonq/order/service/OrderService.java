@@ -123,13 +123,15 @@ public class OrderService {
     public Page<OrderDetailResponse> getDailyOrders(
             Long memberId,
             LocalDate date,
+            Integer minAmount,
+            Integer maxAmount,
             Pageable pageable
     ) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.plusDays(1).atStartOfDay().minusNanos(1);
 
         return orderRepo
-                .findByMerchantAndCreatedAtBetween(memberId, start, end, pageable)
+                .findByMerchantAndCreatedAtBetweenAndAmountRange(memberId, start, end, minAmount, maxAmount, pageable)
                 .map(this::toDto);
     }
 
@@ -141,6 +143,8 @@ public class OrderService {
             Long memberId,
             int year,
             int month,
+            Integer minAmount,
+            Integer maxAmount,
             Pageable pageable
     ) {
         LocalDate firstDay = LocalDate.of(year, month, 1);
@@ -148,7 +152,7 @@ public class OrderService {
         LocalDateTime end = firstDay.plusMonths(1).atStartOfDay().minusNanos(1);
 
         return orderRepo
-                .findByMerchantAndCreatedAtBetween(memberId, start, end, pageable)
+                .findByMerchantAndCreatedAtBetweenAndAmountRange(memberId, start, end, minAmount, maxAmount, pageable)
                 .map(this::toDto);
     }
 
