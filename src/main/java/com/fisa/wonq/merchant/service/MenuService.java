@@ -3,10 +3,13 @@ package com.fisa.wonq.merchant.service;
 import com.fisa.wonq.merchant.controller.dto.req.MenuRequest;
 import com.fisa.wonq.merchant.controller.dto.res.MenuDetailResponse;
 import com.fisa.wonq.merchant.controller.dto.res.MenuResponse;
+import com.fisa.wonq.merchant.controller.dto.res.MenuStatusResponse;
 import com.fisa.wonq.merchant.domain.Menu;
 import com.fisa.wonq.merchant.domain.MenuOption;
 import com.fisa.wonq.merchant.domain.MenuOptionGroup;
 import com.fisa.wonq.merchant.domain.Merchant;
+import com.fisa.wonq.merchant.exception.MenuErrorCode;
+import com.fisa.wonq.merchant.exception.MenuException;
 import com.fisa.wonq.merchant.exception.MerchantErrorCode;
 import com.fisa.wonq.merchant.exception.MerchantException;
 import com.fisa.wonq.merchant.repository.MenuRepository;
@@ -125,5 +128,25 @@ public class MenuService {
                             .build();
                 })
                 .toList();
+    }
+
+    @Transactional
+    public MenuStatusResponse changeAvailability(Long memberId, Long menuId, Boolean isAvailable) {
+        // memberId + menuId 로 한 번에 조회 → 권한 검증 포함
+        Menu menu = menuRepository
+                .findByMenuIdAndMerchant_Member_MemberId(menuId, memberId)
+                .orElseThrow(() -> new MenuException(MenuErrorCode.UNAUTHORIZED_MENU_ACCESS));
+
+        // 상태 변경
+        menu.changeAvailability(isAvailable);
+
+        // 메뉴는 이미 영속상태이므로 save() 호출은 선택적
+        // 그래도 명시적으로 저장하고 싶다면 아래 주석 해제
+        menuRepository.save(menu);
+
+        return MenuStatusResponse.builder()
+                .menuId(menu.getMenuId())
+                .isAvailable(menu.getIsAvailable())
+                .build();
     }
 }

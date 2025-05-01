@@ -5,8 +5,10 @@ import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
 import com.fisa.wonq.merchant.controller.dto.req.MenuRequest;
+import com.fisa.wonq.merchant.controller.dto.req.MenuStatusRequest;
 import com.fisa.wonq.merchant.controller.dto.res.MenuDetailResponse;
 import com.fisa.wonq.merchant.controller.dto.res.MenuResponse;
+import com.fisa.wonq.merchant.controller.dto.res.MenuStatusResponse;
 import com.fisa.wonq.merchant.service.MenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -44,5 +46,21 @@ public class MenuController {
     ) {
         var dtos = menuService.getMenusWithOptionsByMerchantId(merchantId);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dtos));
+    }
+
+    @PatchMapping("/{menuId}/availability")
+    @Operation(
+            summary = "메뉴 판매 상태 변경",
+            description = "특정 메뉴의 판매 가능 여부(isAvailable)를 변경합니다."
+    )
+    public ResponseEntity<ApiResponse<MenuStatusResponse>> changeAvailability(
+            @CurrentAccount Account account,
+            @PathVariable Long menuId,
+            @Valid @RequestBody MenuStatusRequest req
+    ) {
+        MenuStatusResponse resp = menuService.changeAvailability(
+                account.id(), menuId, req.getIsAvailable()
+        );
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
     }
 }

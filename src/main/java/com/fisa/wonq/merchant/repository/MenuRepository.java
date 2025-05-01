@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, Long> {
@@ -16,4 +17,10 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
      */
     @EntityGraph(attributePaths = {"optionGroups"})
     List<Menu> findAllByMerchant_MerchantId(Long merchantId);
+
+    /**
+     * memberId 기준으로 소속 가맹점까지 조인해서 메뉴를 한 번에 조회합니다.
+     * 없으면 Optional.empty().
+     */
+    Optional<Menu> findByMenuIdAndMerchant_Member_MemberId(Long menuId, Long memberId);
 }

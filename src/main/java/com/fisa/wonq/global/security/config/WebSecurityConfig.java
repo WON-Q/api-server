@@ -107,7 +107,8 @@ public class WebSecurityConfig {
                 antMatcher("/api/v1/merchant/info"),
                 antMatcher("/api/v1/merchant/tables"),
                 antMatcher("/api/v1/merchant/menus"),
-                antMatcher("/api/v1/merchant/menus/update")
+                antMatcher("/api/v1/merchant/menus/update"),
+                antMatcher("/api/v1/merchant/menus/{merchantId}/availability")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }

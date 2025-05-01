@@ -63,4 +63,9 @@ public class Menu {
         optionGroups.add(group);
         group.setMenu(this);
     }
+
+    // 판매 가능 여부 변경
+    public void changeAvailability(Boolean available) {
+        this.isAvailable = available;
+    }
 }
