@@ -28,13 +28,13 @@ public class OrderMenu extends BaseDateTimeEntity {
     @Builder.Default
     private OrderMenuStatus status = OrderMenuStatus.ORDERED;
 
-    @Column(nullable = false)
+    @Column
     private Integer quantity;
 
-    @Column(nullable = false)
+    @Column
     private Integer unitPrice;
 
-    @Column(nullable = false)
+    @Column
     private Integer totalPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
