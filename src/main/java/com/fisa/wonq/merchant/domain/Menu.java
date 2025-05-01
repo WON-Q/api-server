@@ -25,6 +25,7 @@ public class Menu {
     @Column(nullable = false)
     private String name;
 
+    @Column
     private String description;
 
     @Column(nullable = false)
