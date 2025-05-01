@@ -53,7 +53,7 @@ public class MemberController {
     }
 
     @Operation(summary = "아이디 중복 확인",
-            description = "accountId 의 사용 가능 여부를 반환합니다.")
+            description = "accountId 의 사용 가능 여부를 반환합니다. \n\n true: 사용 가능한 아이디입니다. | false: 중복된 아이디이므로 사용불가합니다.")
     @GetMapping("/checkAccountId")
     public ResponseEntity<ApiResponse<Boolean>> checkAccountId(
             @RequestParam String accountId
