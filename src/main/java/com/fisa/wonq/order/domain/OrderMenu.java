@@ -2,6 +2,7 @@ package com.fisa.wonq.order.domain;
 
 import com.fisa.wonq.global.domain.BaseDateTimeEntity;
 import com.fisa.wonq.merchant.domain.Menu;
+import com.fisa.wonq.order.domain.enums.OrderMenuStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,11 @@ public class OrderMenu extends BaseDateTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderMenuId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private OrderMenuStatus status = OrderMenuStatus.ORDERED;
 
     @Column(nullable = false)
     private Integer quantity;

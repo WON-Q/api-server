@@ -12,18 +12,22 @@ import com.fisa.wonq.merchant.repository.DiningTableRepository;
 import com.fisa.wonq.merchant.repository.MenuOptionRepository;
 import com.fisa.wonq.merchant.repository.MenuRepository;
 import com.fisa.wonq.order.controller.dto.req.OrderRequest;
+import com.fisa.wonq.order.controller.dto.res.OrderDetailResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderResponse;
 import com.fisa.wonq.order.domain.Order;
 import com.fisa.wonq.order.domain.OrderMenu;
 import com.fisa.wonq.order.domain.OrderMenuOption;
 import com.fisa.wonq.order.domain.PaymentResult;
+import com.fisa.wonq.order.domain.enums.OrderMenuStatus;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +86,7 @@ public class OrderService {
                     .quantity(m.getQuantity())
                     .unitPrice(menu.getPrice())
                     .totalPrice(menu.getPrice() * m.getQuantity())
+                    .status(OrderMenuStatus.ORDERED)
                     .build();
 
             if (m.getOptionIds() != null) {
@@ -108,5 +113,73 @@ public class OrderService {
                 .totalAmount(order.getTotalAmount())
                 .paymentTransactionId(payResult.getTransactionId())
                 .build();
+    }
+
+    /**
+     * 해당 일자(00:00~23:59:59) 주문 조회
+     */
+    @Transactional(readOnly = true)
+    public List<OrderDetailResponse> getDailyOrders(Long memberId, LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.plusDays(1).atStartOfDay().minusNanos(1);
+
+        List<Order> orders = orderRepo.findByMerchantAndCreatedAtBetween(memberId, start, end);
+        return toDtoList(orders);
+    }
+
+    /**
+     * 해당 연·월(1일 00:00 ~ 말일 23:59:59) 주문 조회
+     */
+    @Transactional(readOnly = true)
+    public List<OrderDetailResponse> getMonthlyOrders(Long memberId, int year, int month) {
+        LocalDate firstDay = LocalDate.of(year, month, 1);
+        LocalDateTime start = firstDay.atStartOfDay();
+        LocalDateTime end = firstDay.plusMonths(1).atStartOfDay().minusNanos(1);
+
+        List<Order> orders = orderRepo.findByMerchantAndCreatedAtBetween(memberId, start, end);
+        return toDtoList(orders);
+    }
+
+    private List<OrderDetailResponse> toDtoList(List<Order> orders) {
+        return orders.stream()
+                .map(order -> {
+                    List<OrderDetailResponse.OrderMenuResponse> menus = order.getOrderMenus().stream()
+                            .map(om -> {
+                                List<OrderDetailResponse.OrderMenuOptionResponse> opts =
+                                        om.getOrderMenuOptions().stream()
+                                                .map(o -> OrderDetailResponse.OrderMenuOptionResponse.builder()
+                                                        .orderMenuOptionId(o.getOrderMenuOptionId())
+                                                        .menuOptionId(o.getMenuOption().getMenuOptionId())
+                                                        .optionName(o.getMenuOption().getOptionName())
+                                                        .optionPrice(o.getOptionPrice())
+                                                        .build())
+                                                .toList();
+
+                                return OrderDetailResponse.OrderMenuResponse.builder()
+                                        .orderMenuId(om.getOrderMenuId())
+                                        .menuId(om.getMenu().getMenuId())
+                                        .menuName(om.getMenu().getName())
+                                        .quantity(om.getQuantity())
+                                        .unitPrice(om.getUnitPrice())
+                                        .totalPrice(om.getTotalPrice())
+                                        .status(om.getStatus())  // ORDERED or SERVED
+                                        .options(opts)
+                                        .build();
+                            })
+                            .toList();
+
+                    return OrderDetailResponse.builder()
+                            .orderCode(order.getOrderCode())
+                            .tableNumber(order.getDiningTable().getTableNumber())
+                            .totalAmount(order.getTotalAmount())
+                            .orderStatus(order.getOrderStatus())
+                            .paymentStatus(order.getPaymentStatus())
+                            .paymentMethod(order.getPaymentMethod())
+                            .paidAt(order.getPaidAt())
+                            .createdAt(order.getCreatedAt())
+                            .menus(menus)
+                            .build();
+                })
+                .toList();
     }
 }
