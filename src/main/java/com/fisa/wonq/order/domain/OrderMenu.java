@@ -5,6 +5,7 @@ import com.fisa.wonq.merchant.domain.Menu;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,13 +32,30 @@ public class OrderMenu extends BaseDateTimeEntity {
     private Integer totalPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
     private Menu menu;
 
-    @OneToMany(mappedBy = "orderMenu", cascade = CascadeType.ALL)
-    private List<OrderMenuOption> orderMenuOptions;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @OneToMany(mappedBy = "orderMenu", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderMenuOption> orderMenuOptions = new ArrayList<>();
+
+    /**
+     * 양방향 편의 메서드
+     **/
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public void addOption(OrderMenuOption opt) {
+        orderMenuOptions.add(opt);
+        opt.setOrderMenu(this);
+    }
+
+    public void setTotalPrice(Integer totalPrice) {
+        this.totalPrice = totalPrice;
+    }
 }

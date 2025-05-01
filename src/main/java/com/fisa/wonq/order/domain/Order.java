@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,7 +22,7 @@ import java.util.List;
 @Builder
 public class Order {
     @Id
-    @Column(length = 20)
+    @Column
     private String orderId;
 
     @Column(nullable = false)
@@ -50,6 +51,15 @@ public class Order {
     @JoinColumn(name = "dining_table_id", nullable = false)
     private DiningTable diningTable;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderMenu> orderMenus;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderMenu> orderMenus = new ArrayList<>();
+
+    /**
+     * 양방향 편의 메서드
+     **/
+    public void addOrderMenu(OrderMenu om) {
+        orderMenus.add(om);
+        om.setOrder(this);
+    }
 }

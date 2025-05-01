@@ -47,4 +47,8 @@ public class DiningTable {
     public void changeStatus(TableStatus newStatus) {
         this.status = newStatus;
     }
+
+    public void setStatus(TableStatus tableStatus) {
+        this.status = tableStatus;
+    }
 }
