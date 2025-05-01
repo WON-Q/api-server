@@ -46,32 +46,29 @@ public class OrderService {
         table.changeStatus(TableStatus.IN_PROGRESS);
 
         // 2. 주문 ID 생성
-        String orderId = LocalDateTime.now()
+        String orderCode = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyMMdd'T'HHmm"))
                 + "_t" + table.getTableNumber();
 
         // 3. PG 결제 요청 (스텁)
         PaymentResult payResult = paymentService.charge(
-                orderId,
+                orderCode,
                 req.getTotalAmount(),
                 req.getPaymentMethod()
         );
-        // TODO: 세부적인 결제 에러 핸들링 필요(스텁 단계에서는 일단 String으로 처리
+        // TODO: 세부적인 결제 에러 핸들링 필요(스텁 단계에서는 일단 String으로 처리)
         if (!payResult.isSuccess()) {
             throw new IllegalStateException("PAYMENT_FAILED");
         }
 
         // 4. Order 엔티티 생성 (결제 완료 정보 반영)
-        LocalDateTime now = LocalDateTime.now();
         Order order = Order.builder()
-                .orderId(orderId)
+                .orderCode(orderCode)
                 .totalAmount(req.getTotalAmount())
                 .orderStatus(com.fisa.wonq.order.domain.enums.OrderStatus.PAID)
                 .paymentStatus(com.fisa.wonq.order.domain.enums.PaymentStatus.COMPLETED)
                 .paymentMethod(req.getPaymentMethod())
                 .paidAt(payResult.getPaidAt())
-                .createdAt(now)
-                .updatedAt(now)
                 .diningTable(table)
                 .build();
 
@@ -107,7 +104,7 @@ public class OrderService {
 
         // 7. 응답
         return OrderResponse.builder()
-                .orderId(order.getOrderId())
+                .orderCode(order.getOrderCode())
                 .totalAmount(order.getTotalAmount())
                 .paymentTransactionId(payResult.getTransactionId())
                 .build();

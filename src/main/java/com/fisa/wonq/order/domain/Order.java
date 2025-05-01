@@ -1,5 +1,6 @@
 package com.fisa.wonq.order.domain;
 
+import com.fisa.wonq.global.domain.BaseDateTimeEntity;
 import com.fisa.wonq.merchant.domain.DiningTable;
 import com.fisa.wonq.order.domain.enums.OrderStatus;
 import com.fisa.wonq.order.domain.enums.PaymentMethod;
@@ -20,10 +21,16 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Order {
+public class Order extends BaseDateTimeEntity {
+
+    // 1) 1씩 증가하는 숫자 PK
     @Id
-    @Column
-    private String orderId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // 2) 클라이언트/PG 표시용 유니크 코드
+    @Column(name = "order_code", nullable = false, updatable = false, unique = true)
+    private String orderCode;
 
     @Column(nullable = false)
     private Integer totalAmount;
@@ -41,11 +48,6 @@ public class Order {
     private PaymentMethod paymentMethod;
 
     private LocalDateTime paidAt;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dining_table_id", nullable = false)

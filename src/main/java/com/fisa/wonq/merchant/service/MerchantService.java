@@ -114,7 +114,8 @@ public class MerchantService {
 
                                 // 주문 DTO
                                 return DiningTableDetailResponse.OrderResponse.builder()
-                                        .orderId(order.getOrderId())
+                                        .orderId(order.getId())
+                                        .orderCode(order.getOrderCode())
                                         .totalAmount(order.getTotalAmount())
                                         .orderStatus(order.getOrderStatus())
                                         .createdAt(order.getCreatedAt())

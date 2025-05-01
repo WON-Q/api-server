@@ -10,7 +10,7 @@ import java.util.UUID;
 @Service
 public class StubPaymentService implements PaymentService {
     @Override
-    public PaymentResult charge(String orderId, Integer amount, PaymentMethod method) {
+    public PaymentResult charge(String orderCode, Integer amount, PaymentMethod method) {
 
         // 무조건 성공하도록 스텁
         String fakeTxnId = "STUB_TXN_" + UUID.randomUUID();

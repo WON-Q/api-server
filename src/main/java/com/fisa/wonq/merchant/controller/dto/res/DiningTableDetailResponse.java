@@ -52,8 +52,11 @@ public class DiningTableDetailResponse {
     @Builder
     @Schema(description = "주문 정보 DTO (inner)")
     public static class OrderResponse {
+        @Schema(description = "주문 ID", example = "1")
+        private Long orderId;
+
         @Schema(description = "주문 ID", example = "ORD-20250428-0001")
-        private String orderId;
+        private String orderCode;
 
         @Schema(description = "총 결제 금액", example = "45000")
         private Integer totalAmount;
