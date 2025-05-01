@@ -31,16 +31,16 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @RequestBody LoginRequest req
     ) {
-        // 1) 인증 시도
+        // 인증 시도
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getAccountId(), req.getPassword())
         );
 
-        // 2) Principal(UserDetailsImpl)에서 토큰 생성
+        // Principal(UserDetailsImpl)에서 토큰 생성
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtTokenProvider.createAccessToken((com.fisa.wonq.global.security.user.UserDetailsImpl) userDetails);
 
-        // 3) 응답
+        // 응답
         return ResponseEntity.ok(
                 ApiResponse.of(ResponseCode.SUCCESS,
                         LoginResponse.builder()

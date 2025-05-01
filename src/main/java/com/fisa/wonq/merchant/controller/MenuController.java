@@ -36,13 +36,13 @@ public class MenuController {
 
     @GetMapping("/{merchantId}/list")
     @Operation(
-            summary = "매장 내 전체 메뉴 조회 (비회원용)",
+            summary = "매장 내 전체 메뉴 조회",
             description = "merchantId 를 받아 해당 가맹점에 등록된 모든 메뉴와 옵션 그룹/옵션을 반환합니다."
     )
     public ResponseEntity<ApiResponse<List<MenuDetailResponse>>> listMenus(
             @PathVariable Long merchantId
     ) {
-        List<MenuDetailResponse> dtos = menuService.getMenusWithOptionsByMerchantId(merchantId);
+        var dtos = menuService.getMenusWithOptionsByMerchantId(merchantId);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dtos));
     }
 }

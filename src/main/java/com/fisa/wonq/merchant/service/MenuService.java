@@ -73,10 +73,10 @@ public class MenuService {
             }
         }
 
-        // 5) save 한 번으로 cascade ALL 된 group, option 모두 저장
+        // save 한 번으로 cascade ALL 된 group, option 모두 저장
         Menu saved = menuRepository.save(menu);
 
-        // 6) 결과 반환
+        // 결과 반환
         return MenuResponse.builder()
                 .menuId(saved.getMenuId())
                 .build();
@@ -85,28 +85,34 @@ public class MenuService {
     // 매장 내 전체 메뉴 조회
     @Transactional(readOnly = true)
     public List<MenuDetailResponse> getMenusWithOptionsByMerchantId(Long merchantId) {
-        Merchant merchant = merchantRepository
-                .findWithMenusByMerchantId(merchantId)
-                .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
+        List<Menu> menus = menuRepository
+                .findAllByMerchant_MerchantId(merchantId);
 
-        return merchant.getMenus().stream()
+        return menus.stream()
                 .map(menu -> {
+                    // 옵션 그룹 → DTO 변환
                     var groups = menu.getOptionGroups().stream()
-                            .map(g -> MenuDetailResponse.OptionGroup.builder()
-                                    .groupId(g.getMenuOptionGroupId())
-                                    .groupName(g.getMenuOptionGroupName())
-                                    .displaySequence(g.getDisplaySequence())
-                                    .isDefault(g.getIsDefault())
-                                    .options(g.getOptions().stream()
-                                            .map(o -> MenuDetailResponse.Option.builder()
-                                                    .optionId(o.getMenuOptionId())
-                                                    .optionName(o.getOptionName())
-                                                    .optionPrice(o.getOptionPrice())
-                                                    .build())
-                                            .toList())
-                                    .build())
+                            .map(g -> {
+                                // 옵션은 지연 로딩: 필요한 시점에 쿼리 실행
+                                var optionDtos = g.getOptions().stream()
+                                        .map(o -> MenuDetailResponse.Option.builder()
+                                                .optionId(o.getMenuOptionId())
+                                                .optionName(o.getOptionName())
+                                                .optionPrice(o.getOptionPrice())
+                                                .build())
+                                        .toList();
+
+                                return MenuDetailResponse.OptionGroup.builder()
+                                        .groupId(g.getMenuOptionGroupId())
+                                        .groupName(g.getMenuOptionGroupName())
+                                        .displaySequence(g.getDisplaySequence())
+                                        .isDefault(g.getIsDefault())
+                                        .options(optionDtos)
+                                        .build();
+                            })
                             .toList();
 
+                    // 메뉴 → DTO 변환
                     return MenuDetailResponse.builder()
                             .menuId(menu.getMenuId())
                             .name(menu.getName())
@@ -117,6 +123,7 @@ public class MenuService {
                             .isAvailable(menu.getIsAvailable())
                             .optionGroups(groups)
                             .build();
-                }).toList();
+                })
+                .toList();
     }
 }

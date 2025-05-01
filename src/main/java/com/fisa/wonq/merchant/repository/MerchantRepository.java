@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     /**
-     * 매장 내 모든 테이블·주문·주문메뉴·옵션까지 한 번에 페치할 때 사용
+     * 매장 내 모든 테이블·주문·주문메뉴·옵션까지 한 번에 fetch 할 때 사용
      */
     @EntityGraph(attributePaths = {
             "tables",
