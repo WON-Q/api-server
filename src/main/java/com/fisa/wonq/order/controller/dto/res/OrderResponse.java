@@ -15,4 +15,7 @@ public class OrderResponse {
 
     @Schema(description = "총 결제 금액", example = "35000")
     private Integer totalAmount;
+
+    @Schema(description = "PG 거래 ID", example = "STUB_TXN_abc123456")
+    private String paymentTransactionId;
 }

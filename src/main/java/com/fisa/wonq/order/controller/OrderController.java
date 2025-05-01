@@ -21,7 +21,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    @Operation(summary = "주문 생성",
+    @Operation(summary = "주문 생성(결제 요청)",
             description = "비회원 주문: 테이블 ID, 메뉴/옵션/수량, 전체 결제 금액, 결제 수단을 받아 주문을 생성합니다.")
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
             @RequestBody OrderRequest request

@@ -16,6 +16,7 @@ import com.fisa.wonq.order.controller.dto.res.OrderResponse;
 import com.fisa.wonq.order.domain.Order;
 import com.fisa.wonq.order.domain.OrderMenu;
 import com.fisa.wonq.order.domain.OrderMenuOption;
+import com.fisa.wonq.order.domain.PaymentResult;
 import com.fisa.wonq.order.domain.enums.OrderStatus;
 import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import com.fisa.wonq.order.repository.OrderRepository;
@@ -34,36 +35,52 @@ public class OrderService {
     private final MenuRepository menuRepo;
     private final MenuOptionRepository menuOptionRepo;
     private final OrderRepository orderRepo;
+    private final PaymentService paymentService;
 
+    /**
+     * 주문 생성(결제 요청)
+     */
     @Transactional
     public OrderResponse createOrder(OrderRequest req) {
-        // 테이블 조회 및 상태 변경
+        // 1. 테이블 조회 및 상태 변경
         DiningTable table = tableRepo.findById(req.getTableId())
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.TABLE_NOT_FOUND));
-        table.setStatus(TableStatus.IN_PROGRESS);
+        table.changeStatus(TableStatus.IN_PROGRESS);
 
-        // 주문 ID 생성 (yyMMdd'T'HHmm_t{tableNumber})
-        String orderId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMdd'T'HHmm"))
+        // 2. 주문 ID 생성
+        String orderId = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyMMdd'T'HHmm"))
                 + "_t" + table.getTableNumber();
 
-        // Order 엔티티 생성
+        // 3. PG 결제 요청 (스텁)
+        PaymentResult payResult = paymentService.charge(
+                orderId,
+                req.getTotalAmount(),
+                req.getPaymentMethod()
+        );
+        // TODO: 세부적인 결제 에러 핸들링 필요(스텁 단계에서는 일단 String으로 처리
+        if (!payResult.isSuccess()) {
+            throw new IllegalStateException("PAYMENT_FAILED");
+        }
+
+        // 4. Order 엔티티 생성 (결제 완료 정보 반영)
         LocalDateTime now = LocalDateTime.now();
         Order order = Order.builder()
                 .orderId(orderId)
                 .totalAmount(req.getTotalAmount())
-                .orderStatus(OrderStatus.PAID)
-                .paymentStatus(PaymentStatus.COMPLETED)
+                .orderStatus(com.fisa.wonq.order.domain.enums.OrderStatus.PAID)
+                .paymentStatus(com.fisa.wonq.order.domain.enums.PaymentStatus.COMPLETED)
                 .paymentMethod(req.getPaymentMethod())
-                .paidAt(now)
+                .paidAt(payResult.getPaidAt())
                 .createdAt(now)
                 .updatedAt(now)
                 .diningTable(table)
                 .build();
 
-        // 메뉴별 OrderMenu, OrderMenuOption 생성
+        // 5. 메뉴별 OrderMenu, OrderMenuOption 생성
         for (var m : req.getMenus()) {
             Menu menu = menuRepo.findById(m.getMenuId())
-                    .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_NOT_FOUND));
+                    .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_NOT_FOUND);
 
             OrderMenu om = OrderMenu.builder()
                     .menu(menu)
@@ -75,27 +92,26 @@ public class OrderService {
             if (m.getOptionIds() != null) {
                 for (Long optId : m.getOptionIds()) {
                     MenuOption mo = menuOptionRepo.findById(optId)
-                            .orElseThrow(() -> new MerchantException(MerchantErrorCode.OPTION_NOT_FOUND));
+                            .orElseThrow(() -> new MerchantException(MerchantErrorCode.OPTION_NOT_FOUND);
                     OrderMenuOption omo = OrderMenuOption.builder()
                             .menuOption(mo)
                             .optionPrice(mo.getOptionPrice())
                             .build();
                     om.addOption(omo);
-                    // 옵션 가격만큼 totalPrice에 추가
                     om.setTotalPrice(om.getTotalPrice() + mo.getOptionPrice());
                 }
             }
-
             order.addOrderMenu(om);
         }
 
-        // 저장 (테이블 상태와 주문 모두 트랜잭션에 반영)
+        // 6. 저장
         orderRepo.save(order);
 
-        // 응답
+        // 7. 응답
         return OrderResponse.builder()
                 .orderId(order.getOrderId())
                 .totalAmount(order.getTotalAmount())
+                .paymentTransactionId(payResult.getTransactionId())
                 .build();
     }
 }
