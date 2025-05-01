@@ -111,7 +111,8 @@ public class WebSecurityConfig {
                 antMatcher("/api/v1/merchant/menus/{merchantId}/availability"),
                 antMatcher("/api/v1/merchant/tables/{tableId}/status"),
                 antMatcher("/api/v1/orders/daily"),
-                antMatcher("/api/v1/orders/daily")
+                antMatcher("/api/v1/orders/daily"),
+                antMatcher("/api/v1/orders/{orderMenuId}/status")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }

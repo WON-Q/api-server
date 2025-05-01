@@ -3,6 +3,7 @@ package com.fisa.wonq.order.service;
 import com.fisa.wonq.merchant.domain.DiningTable;
 import com.fisa.wonq.merchant.domain.Menu;
 import com.fisa.wonq.merchant.domain.MenuOption;
+import com.fisa.wonq.merchant.domain.Merchant;
 import com.fisa.wonq.merchant.domain.enums.TableStatus;
 import com.fisa.wonq.merchant.exception.MenuErrorCode;
 import com.fisa.wonq.merchant.exception.MenuException;
@@ -19,6 +20,7 @@ import com.fisa.wonq.order.domain.OrderMenu;
 import com.fisa.wonq.order.domain.OrderMenuOption;
 import com.fisa.wonq.order.domain.PaymentResult;
 import com.fisa.wonq.order.domain.enums.OrderMenuStatus;
+import com.fisa.wonq.order.repository.OrderMenuRepository;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,6 +40,7 @@ public class OrderService {
     private final MenuRepository menuRepo;
     private final MenuOptionRepository menuOptionRepo;
     private final OrderRepository orderRepo;
+    private final OrderMenuRepository orderMenuRepo;
     private final PaymentService paymentService;
 
     /**
@@ -189,5 +192,24 @@ public class OrderService {
                 .createdAt(order.getCreatedAt())
                 .menus(menus)
                 .build();
+    }
+
+    /**
+     * 주문-메뉴 상태 변경 (점주용)
+     */
+    @Transactional
+    public void changeOrderMenuStatus(Long memberId, Long orderMenuId, OrderMenuStatus newStatus) {
+        OrderMenu om = orderMenuRepo.findById(orderMenuId)
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.ORDER_MENU_NOT_FOUND));
+
+        // 이 주문메뉴가 속한 가맹점이 현재 로그인한 점주의 매장인지 확인
+        Merchant merchant = om.getOrder()
+                .getDiningTable()
+                .getMerchant();
+        if (!merchant.getMember().getMemberId().equals(memberId)) {
+            throw new MerchantException(MerchantErrorCode.ACCESS_DENIED);
+        }
+
+        om.setStatus(newStatus);
     }
 }

@@ -4,6 +4,7 @@ import com.fisa.wonq.global.response.ApiResponse;
 import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
+import com.fisa.wonq.order.controller.dto.req.ChangeOrderMenuStatusRequest;
 import com.fisa.wonq.order.controller.dto.req.OrderRequest;
 import com.fisa.wonq.order.controller.dto.res.OrderDetailResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderResponse;
@@ -70,6 +71,20 @@ public class OrderController {
         Page<OrderDetailResponse> page = orderService
                 .getMonthlyOrders(account.id(), year, month, minAmount, maxAmount, pageable);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, page));
+    }
+
+    @PutMapping("/{orderMenuId}/status")
+    @Operation(
+            summary = "주문된 메뉴 상태 변경",
+            description = "점주 입장에서 주문된 개별 메뉴의 상태를 ORDERED → SERVED 등으로 변경합니다."
+    )
+    public ResponseEntity<ApiResponse<Void>> changeStatus(
+            @CurrentAccount Account account,
+            @PathVariable Long orderMenuId,
+            @RequestBody ChangeOrderMenuStatusRequest req
+    ) {
+        orderService.changeOrderMenuStatus(account.id(), orderMenuId, req.getStatus());
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS));
     }
 }
 

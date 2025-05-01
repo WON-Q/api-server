@@ -64,4 +64,8 @@ public class OrderMenu extends BaseDateTimeEntity {
     public void setTotalPrice(Integer totalPrice) {
         this.totalPrice = totalPrice;
     }
+
+    public void setStatus(OrderMenuStatus orderMenuStatus) {
+        this.status = orderMenuStatus;
+    }
 }
