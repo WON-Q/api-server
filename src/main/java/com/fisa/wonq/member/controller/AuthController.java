@@ -3,8 +3,8 @@ package com.fisa.wonq.member.controller;
 import com.fisa.wonq.global.response.ApiResponse;
 import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.jwt.JwtTokenProvider;
-import com.fisa.wonq.member.controller.dto.AuthRequestDTO.LoginRequest;
-import com.fisa.wonq.member.controller.dto.AuthResponseDTO.LoginResponse;
+import com.fisa.wonq.member.controller.dto.req.AuthRequestDTO.LoginRequest;
+import com.fisa.wonq.member.controller.dto.res.AuthResponseDTO.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,16 +31,16 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @RequestBody LoginRequest req
     ) {
-        // 1) 인증 시도
+        // 인증 시도
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getAccountId(), req.getPassword())
         );
 
-        // 2) Principal(UserDetailsImpl)에서 토큰 생성
+        // Principal(UserDetailsImpl)에서 토큰 생성
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtTokenProvider.createAccessToken((com.fisa.wonq.global.security.user.UserDetailsImpl) userDetails);
 
-        // 3) 응답
+        // 응답
         return ResponseEntity.ok(
                 ApiResponse.of(ResponseCode.SUCCESS,
                         LoginResponse.builder()

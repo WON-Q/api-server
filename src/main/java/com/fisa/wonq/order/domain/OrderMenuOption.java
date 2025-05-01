@@ -29,4 +29,11 @@ public class OrderMenuOption extends BaseDateTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_option_id", nullable = false)
     private MenuOption menuOption;
+
+    /**
+     * 부모(주문메뉴) 세팅
+     **/
+    public void setOrderMenu(OrderMenu orderMenu) {
+        this.orderMenu = orderMenu;
+    }
 }

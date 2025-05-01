@@ -1,6 +1,6 @@
 package com.fisa.wonq.member.service;
 
-import com.fisa.wonq.member.controller.dto.OcrResponseDTO;
+import com.fisa.wonq.member.controller.dto.res.OcrResponseDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

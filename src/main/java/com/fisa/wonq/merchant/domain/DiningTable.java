@@ -31,10 +31,24 @@ public class DiningTable {
     @Column(nullable = false)
     private Integer tableNumber;
 
+    private Integer locationX;
+    private Integer locationY;
+    private Integer locationW;
+    private Integer locationH;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "merchant_id", nullable = false)
     private Merchant merchant;
 
     @OneToMany(mappedBy = "diningTable", cascade = CascadeType.ALL)
     private List<Order> orders;
+
+    // 테이블 상태 변경
+    public void changeStatus(TableStatus newStatus) {
+        this.status = newStatus;
+    }
+
+    public void setStatus(TableStatus tableStatus) {
+        this.status = tableStatus;
+    }
 }

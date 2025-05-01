@@ -1,4 +1,4 @@
-package com.fisa.wonq.member.controller.dto;
+package com.fisa.wonq.member.controller.dto.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -32,6 +32,12 @@ public class MemberRequestDTO {
         @Schema(description = "가맹점 이름", example = "원큐식당")
         private String merchantName;
 
+        @Schema(description = "소개 문구", example = "맛있는 원큐식당입니다.")
+        private String description;
+
+        @Schema(description = "가맹점 대표 이미지", example = "S3 url")
+        private String merchantImg;
+
         @Schema(description = "대표자명", example = "홍길동")
         private String merchantOwnerName;
 
@@ -47,8 +53,14 @@ public class MemberRequestDTO {
         @Schema(description = "가맹점 주소", example = "서울특별시 강남구 테헤란로 123")
         private String merchantAddress;
 
+        @Schema(description = "대표계좌 은행명", example = "우리은행")
+        private String merchantAccountBankName;
+
         @Schema(description = "대표계좌번호", example = "123-456-78901234")
         private String merchantAccount;
+
+        @Schema(description = "예금주명", example = "김원큐")
+        private String merchantAccountHolderName;
 
         @Schema(description = "오픈 시간 (HH:mm)", example = "09:00")
         private String openTime;

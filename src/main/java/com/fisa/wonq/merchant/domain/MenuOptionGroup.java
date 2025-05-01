@@ -3,6 +3,7 @@ package com.fisa.wonq.merchant.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,6 +32,20 @@ public class MenuOptionGroup {
     @JoinColumn(name = "menu_id", nullable = false)
     private Menu menu;
 
-    @OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL)
-    private List<MenuOption> options;
+    @OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<MenuOption> options = new ArrayList<>();
+
+    /**
+     * 양방향 편의 메서드
+     */
+    public void setMenu(Menu menu) {
+        this.menu = menu;
+    }
+
+    public void addOption(MenuOption option) {
+        options.add(option);
+        option.setOptionGroup(this);
+        option.setMenu(this.menu);
+    }
 }

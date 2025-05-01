@@ -23,7 +23,6 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import java.util.List;
 
 import static com.fisa.wonq.member.domain.enums.MemberRole.ROLE_USER;
-import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 @Configuration
@@ -105,8 +104,15 @@ public class WebSecurityConfig {
     // 인증 및 인가가 필요한 엔드포인트에 적용되는 RequestMatcher
     private RequestMatcher[] requestHasRoleUser() {
         List<RequestMatcher> requestMatchers = List.of(
-                antMatcher("/api/v1/members/**"),
-                antMatcher(PATCH, "/api/v1/members")
+                antMatcher("/api/v1/merchant/info"),
+                antMatcher("/api/v1/merchant/tables"),
+                antMatcher("/api/v1/merchant/menus"),
+                antMatcher("/api/v1/merchant/menus/update"),
+                antMatcher("/api/v1/merchant/menus/{merchantId}/availability"),
+                antMatcher("/api/v1/merchant/tables/{tableId}/status"),
+                antMatcher("/api/v1/orders/daily"),
+                antMatcher("/api/v1/orders/daily"),
+                antMatcher("/api/v1/orders/{orderMenuId}/status")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }
@@ -123,7 +129,9 @@ public class WebSecurityConfig {
                 antMatcher("/api/v1/auth/ocr"),
                 antMatcher("/api/v1/auth/register"),
                 antMatcher("/api/v1/auth/checkAccountId"),
-                antMatcher("/api/v1/auth/login")
+                antMatcher("/api/v1/auth/login"),
+                antMatcher("/api/v1/merchant/image"),
+                antMatcher("/api/v1/merchant/menus/{merchantId}/list")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }

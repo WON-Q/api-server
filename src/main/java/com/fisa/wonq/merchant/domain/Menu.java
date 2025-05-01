@@ -1,10 +1,10 @@
 package com.fisa.wonq.merchant.domain;
 
-import com.fisa.wonq.order.domain.OrderMenu;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,7 +25,11 @@ public class Menu {
     @Column(nullable = false)
     private String name;
 
+    @Column
     private String description;
+
+    @Column(nullable = false)
+    private String category;
 
     @Column(nullable = false)
     private Integer price;
@@ -40,12 +44,28 @@ public class Menu {
     @JoinColumn(name = "merchant_id", nullable = false)
     private Merchant merchant;
 
-    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL)
-    private List<MenuOptionGroup> optionGroups;
+    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<MenuOptionGroup> optionGroups = new ArrayList<>();
 
-    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL)
-    private List<MenuOption> options;
+    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<MenuOption> options = new ArrayList<>();
 
-    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL)
-    private List<OrderMenu> orderMenus;
+    /**
+     * 양방향 편의 메서드
+     */
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
+    }
+
+    public void addOptionGroup(MenuOptionGroup group) {
+        optionGroups.add(group);
+        group.setMenu(this);
+    }
+
+    // 판매 가능 여부 변경
+    public void changeAvailability(Boolean available) {
+        this.isAvailable = available;
+    }
 }
