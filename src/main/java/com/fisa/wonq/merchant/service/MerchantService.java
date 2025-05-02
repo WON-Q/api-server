@@ -4,6 +4,8 @@ package com.fisa.wonq.merchant.service;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.merchant.controller.dto.req.DiningTableRequest;
 import com.fisa.wonq.merchant.controller.dto.req.DiningTableStatusRequest;
+import com.fisa.wonq.merchant.controller.dto.req.DiningTableUpdateRequest;
+import com.fisa.wonq.merchant.controller.dto.req.MerchantInfoUpdateRequest;
 import com.fisa.wonq.merchant.controller.dto.res.*;
 import com.fisa.wonq.merchant.domain.DiningTable;
 import com.fisa.wonq.merchant.domain.Merchant;
@@ -161,6 +163,58 @@ public class MerchantService {
         return DiningTableStatusResponse.builder()
                 .diningTableId(table.getDiningTableId())
                 .status(table.getStatus())
+                .build();
+    }
+
+    // 가맹점 정보 업데이트
+    @Transactional
+    public MerchantInfoResponse updateMerchantInfo(Long memberId, MerchantInfoUpdateRequest req) {
+        Merchant m = merchantRepository.findByMemberMemberId(memberId)
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
+
+        // 변경된 필드만 엔티티에 반영
+        m.updateBasicInfo(
+                req.getMerchantOwnerPhoneNo(),
+                req.getDescription(),
+                req.getMerchantAccountBankName(),
+                req.getMerchantAccount(),
+                req.getMerchantAccountHolderName()
+        );
+
+        // JPA 더티체킹으로 자동 반영
+        return MerchantInfoResponse.builder()
+                .merchantName(m.getMerchantName())
+                .businessRegistrationNo(m.getBusinessRegistrationNo())
+                .merchantOwnerName(m.getMerchantOwnerName())
+                .merchantOwnerPhoneNo(m.getMerchantOwnerPhoneNo())
+                .merchantAddress(m.getMerchantAddress())
+                .description(m.getDescription())
+                .merchantAccountBankName(m.getMerchantAccountBankName())
+                .merchantAccount(m.getMerchantAccount())
+                .merchantAccountHolderName(m.getMerchantAccountHolderName())
+                .build();
+    }
+
+    // 테이블 정보 수정
+    @Transactional
+    public DiningTableUpdateResponse updateDiningTableInfo(
+            Long memberId,
+            Long tableId,
+            DiningTableUpdateRequest req
+    ) {
+        // 권한이 확인된 테이블만 조회
+        DiningTable table = diningTableRepository
+                .findByDiningTableIdAndMerchant_Member_MemberId(tableId, memberId)
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.TABLE_NOT_FOUND));
+
+        // 변경된 값만 덮어쓰기
+        table.updateInfo(req.getTableNumber(), req.getCapacity());
+
+        // JPA 더티체킹으로 자동 저장
+        return DiningTableUpdateResponse.builder()
+                .diningTableId(table.getDiningTableId())
+                .tableNumber(table.getTableNumber())
+                .capacity(table.getCapacity())
                 .build();
     }
 }

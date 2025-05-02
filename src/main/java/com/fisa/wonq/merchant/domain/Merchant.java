@@ -88,4 +88,19 @@ public class Merchant extends BaseDateTimeEntity {
     public void setMember(Member member) {
         this.member = member;
     }
+
+    // 필드 업데이트 메서드
+    public void updateBasicInfo(
+            String phone,
+            String description,
+            String bankName,
+            String account,
+            String holderName
+    ) {
+        if (phone != null) this.merchantOwnerPhoneNo = phone;
+        if (description != null) this.description = description;
+        if (bankName != null) this.merchantAccountBankName = bankName;
+        if (account != null) this.merchantAccount = account;
+        if (holderName != null) this.merchantAccountHolderName = holderName;
+    }
 }
