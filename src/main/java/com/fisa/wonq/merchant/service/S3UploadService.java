@@ -40,4 +40,33 @@ public class S3UploadService {
         );
         return String.format("https://%s.s3.ap-northeast-2.amazonaws.com/%s", bucketName, key);
     }
+
+    /**
+     * 바이트 배열 + 파일명 + 컨텐츠타입으로 S3에 업로드
+     */
+    public String upload(byte[] data, String filename, String contentType) {
+        // 확장자 분리
+        String ext = filename.contains(".")
+                ? filename.substring(filename.lastIndexOf('.'))
+                : "";
+        // 키 생성 (UUID + 확장자)
+        String key = UUID.randomUUID().toString() + ext;
+
+        // PutObject
+        s3Client.putObject(
+                PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType(contentType)
+                        .acl(ObjectCannedACL.PUBLIC_READ)
+                        .build(),
+                RequestBody.fromBytes(data)
+        );
+
+        // 공개 URL 반환
+        return "https://" +
+                bucketName +
+                ".s3.ap-northeast-2.amazonaws.com/" +
+                key;
+    }
 }

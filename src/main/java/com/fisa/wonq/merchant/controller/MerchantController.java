@@ -28,7 +28,7 @@ import java.util.List;
 public class MerchantController {
 
     private final MerchantService merchantService;
-    private final QrService qrCodeService;
+    private final QrService qrService;
 
 
     @GetMapping("/info")
@@ -91,7 +91,7 @@ public class MerchantController {
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
     }
 
-    @PostMapping
+    @PostMapping("/qr")
     @Operation(
             summary = "QR 코드 생성 및 S3 업로드",
             description = "메뉴 전체 목록 페이지 URL을 받아 QR 코드를 생성, S3에 업로드한 뒤 해당 이미지 URL을 반환합니다."
@@ -99,7 +99,7 @@ public class MerchantController {
     public ResponseEntity<ApiResponse<QrCodeResponse>> generateQr(
             @Valid @RequestBody QrCodeRequest request
     ) {
-        String imageUrl = qrCodeService.generateQrCodeAndUpload(request.getTargetUrl());
+        String imageUrl = qrService.generateQrCodeAndUpload(request.getTargetUrl());
         QrCodeResponse resp = QrCodeResponse.builder()
                 .qrCodeImageUrl(imageUrl)
                 .build();
