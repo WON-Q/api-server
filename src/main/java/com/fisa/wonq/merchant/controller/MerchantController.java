@@ -4,10 +4,7 @@ import com.fisa.wonq.global.response.ApiResponse;
 import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
-import com.fisa.wonq.merchant.controller.dto.req.DiningTableRequest;
-import com.fisa.wonq.merchant.controller.dto.req.DiningTableStatusRequest;
-import com.fisa.wonq.merchant.controller.dto.req.MerchantInfoUpdateRequest;
-import com.fisa.wonq.merchant.controller.dto.req.QrCodeRequest;
+import com.fisa.wonq.merchant.controller.dto.req.*;
 import com.fisa.wonq.merchant.controller.dto.res.*;
 import com.fisa.wonq.merchant.service.MerchantService;
 import com.fisa.wonq.merchant.service.QrService;
@@ -116,5 +113,18 @@ public class MerchantController {
     ) {
         MerchantInfoResponse dto = merchantService.updateMerchantInfo(account.id(), req);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dto));
+    }
+
+    @PutMapping("/tables/{tableId}")
+    @Operation(summary = "테이블 정보 수정",
+            description = "테이블 번호와 좌석 수를 부분적으로 수정합니다.")
+    public ResponseEntity<ApiResponse<DiningTableUpdateResponse>> updateTableInfo(
+            @CurrentAccount Account account,
+            @PathVariable Long tableId,
+            @Valid @RequestBody DiningTableUpdateRequest req
+    ) {
+        DiningTableUpdateResponse resp =
+                merchantService.updateDiningTableInfo(account.id(), tableId, req);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
     }
 }

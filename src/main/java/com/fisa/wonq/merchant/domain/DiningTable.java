@@ -51,4 +51,14 @@ public class DiningTable {
     public void setStatus(TableStatus tableStatus) {
         this.status = tableStatus;
     }
+
+    // 일부 필드만 수정
+    public void updateInfo(Integer newTableNumber, Integer newCapacity) {
+        if (newTableNumber != null) {
+            this.tableNumber = newTableNumber;
+        }
+        if (newCapacity != null) {
+            this.capacity = newCapacity;
+        }
+    }
 }
