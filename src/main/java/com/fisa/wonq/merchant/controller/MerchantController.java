@@ -6,6 +6,7 @@ import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
 import com.fisa.wonq.merchant.controller.dto.req.DiningTableRequest;
 import com.fisa.wonq.merchant.controller.dto.req.DiningTableStatusRequest;
+import com.fisa.wonq.merchant.controller.dto.req.MerchantInfoUpdateRequest;
 import com.fisa.wonq.merchant.controller.dto.req.QrCodeRequest;
 import com.fisa.wonq.merchant.controller.dto.res.*;
 import com.fisa.wonq.merchant.service.MerchantService;
@@ -104,5 +105,16 @@ public class MerchantController {
                 .qrCodeImageUrl(imageUrl)
                 .build();
         return ResponseEntity.ok(ApiResponse.of(resp));
+    }
+
+    @PatchMapping("/info")
+    @Operation(summary = "가맹점 기본정보 수정",
+            description = "매장 전화번호·소개글·계좌정보를 일부만 수정할 수 있습니다.")
+    public ResponseEntity<ApiResponse<MerchantInfoResponse>> updateMerchantInfo(
+            @CurrentAccount Account account,
+            @Valid @RequestBody MerchantInfoUpdateRequest req
+    ) {
+        MerchantInfoResponse dto = merchantService.updateMerchantInfo(account.id(), req);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, dto));
     }
 }
