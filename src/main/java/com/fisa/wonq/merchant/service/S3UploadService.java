@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -22,13 +23,10 @@ public class S3UploadService {
     private String bucketName;
 
     public String upload(MultipartFile file) throws IOException {
-        String original = file.getOriginalFilename();
-        String ext = "";
-
-        if (original != null && original.contains(".")) {
-            ext = original.substring(original.lastIndexOf('.'));
-        }
-
+        String ext = Optional.ofNullable(file.getOriginalFilename())
+                .filter(n -> n.contains("."))
+                .map(n -> n.substring(n.lastIndexOf('.')))
+                .orElse("");
         String key = UUID.randomUUID().toString() + ext;
 
         s3Client.putObject(
@@ -40,7 +38,6 @@ public class S3UploadService {
                         .build(),
                 RequestBody.fromBytes(file.getBytes())
         );
-
-        return "https://" + bucketName + ".s3.ap-northeast-2.amazonaws.com/" + key;
+        return String.format("https://%s.s3.ap-northeast-2.amazonaws.com/%s", bucketName, key);
     }
 }
