@@ -6,10 +6,13 @@ import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
 import com.fisa.wonq.merchant.controller.dto.req.DiningTableRequest;
 import com.fisa.wonq.merchant.controller.dto.req.DiningTableStatusRequest;
+import com.fisa.wonq.merchant.controller.dto.req.QrCodeRequest;
 import com.fisa.wonq.merchant.controller.dto.res.*;
 import com.fisa.wonq.merchant.service.MerchantService;
+import com.fisa.wonq.merchant.service.QrService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +28,7 @@ import java.util.List;
 public class MerchantController {
 
     private final MerchantService merchantService;
+    private final QrService qrService;
 
 
     @GetMapping("/info")
@@ -85,5 +89,20 @@ public class MerchantController {
                 account.id(), tableId, req
         );
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
+    }
+
+    @PostMapping("/qr")
+    @Operation(
+            summary = "QR 코드 생성 및 S3 업로드",
+            description = "메뉴 전체 목록 페이지 URL을 받아 QR 코드를 생성, S3에 업로드한 뒤 해당 이미지 URL을 반환합니다."
+    )
+    public ResponseEntity<ApiResponse<QrCodeResponse>> generateQr(
+            @Valid @RequestBody QrCodeRequest request
+    ) {
+        String imageUrl = qrService.generateQrCodeAndUpload(request.getTargetUrl());
+        QrCodeResponse resp = QrCodeResponse.builder()
+                .qrCodeImageUrl(imageUrl)
+                .build();
+        return ResponseEntity.ok(ApiResponse.of(resp));
     }
 }
