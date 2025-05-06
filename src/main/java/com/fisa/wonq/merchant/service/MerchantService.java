@@ -37,6 +37,7 @@ public class MerchantService {
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
 
         return MerchantInfoResponse.builder()
+                .merchantId(m.getMerchantId())
                 .merchantName(m.getMerchantName())
                 .businessRegistrationNo(m.getBusinessRegistrationNo())
                 .merchantOwnerName(m.getMerchantOwnerName())
