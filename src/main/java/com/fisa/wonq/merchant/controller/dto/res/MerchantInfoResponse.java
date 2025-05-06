@@ -10,6 +10,10 @@ import lombok.*;
 @AllArgsConstructor
 @Schema(description = "가맹점 기본 정보 조회 응답 DTO")
 public class MerchantInfoResponse {
+
+    @Schema(description = "가맹점 ID", example = "1")
+    private Long merchantId;
+
     @Schema(description = "매장 이름", example = "원큐식당")
     private String merchantName;
 
