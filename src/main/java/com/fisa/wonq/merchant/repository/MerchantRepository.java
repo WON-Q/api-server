@@ -9,14 +9,13 @@ import java.util.Optional;
 
 @Repository
 public interface MerchantRepository extends JpaRepository<Merchant, Long> {
+
     /**
-     * 매장 내 모든 테이블·주문·주문메뉴·옵션까지 한 번에 fetch 할 때 사용
+     * 매장 내 모든 테이블만 한 번에 JOIN FETCH 하고,
+     * 각 테이블의 orders는 @Fetch(SUBSELECT)에 의해 별도 쿼리로 로딩됩니다.
      */
     @EntityGraph(attributePaths = {
-            "tables",
-            "tables.orders",
-            "tables.orders.orderMenus",
-            "tables.orders.orderMenus.orderMenuOptions"
+            "tables"
     })
     Optional<Merchant> findWithTablesAndOrdersByMemberMemberId(Long memberId);
 

@@ -4,6 +4,8 @@ import com.fisa.wonq.merchant.domain.enums.TableStatus;
 import com.fisa.wonq.order.domain.Order;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.List;
 
@@ -41,6 +43,7 @@ public class DiningTable {
     private Merchant merchant;
 
     @OneToMany(mappedBy = "diningTable", cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SUBSELECT)
     private List<Order> orders;
 
     // 테이블 상태 변경

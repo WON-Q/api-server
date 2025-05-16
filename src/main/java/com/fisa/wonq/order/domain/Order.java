@@ -7,6 +7,8 @@ import com.fisa.wonq.order.domain.enums.PaymentMethod;
 import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,19 +18,18 @@ import java.util.List;
  * 주문
  */
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class Order extends BaseDateTimeEntity {
 
-    // 1) 1씩 증가하는 숫자 PK
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 2) 클라이언트/PG 표시용 유니크 코드
+    // 클라이언트/PG 결제용 유니크 코드
     @Column(name = "order_code", nullable = false, updatable = false, unique = true)
     private String orderCode;
 
@@ -55,6 +56,7 @@ public class Order extends BaseDateTimeEntity {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @Fetch(FetchMode.SUBSELECT)
     private List<OrderMenu> orderMenus = new ArrayList<>();
 
     /**
