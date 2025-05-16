@@ -16,7 +16,7 @@ import java.util.List;
  * 주문
  */
 @Entity
-@Table(name = "orders")
+@Table(name = "order")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
