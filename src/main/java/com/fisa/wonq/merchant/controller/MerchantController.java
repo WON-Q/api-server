@@ -127,4 +127,16 @@ public class MerchantController {
                 merchantService.updateDiningTableInfo(account.id(), tableId, req);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
     }
+
+    @GetMapping("/{merchantId}/overview")
+    @Operation(
+            summary = "가맹점 대표 이미지·이름 조회(비회원용)",
+            description = "merchantId로 해당 가맹점의 이름과 대표 이미지 URL을 반환합니다."
+    )
+    public ResponseEntity<ApiResponse<MerchantOverviewResponse>> getMerchantOverview(
+            @PathVariable Long merchantId
+    ) {
+        MerchantOverviewResponse dto = merchantService.getMerchantOverview(merchantId);
+        return ResponseEntity.ok(ApiResponse.of(dto));
+    }
 }
