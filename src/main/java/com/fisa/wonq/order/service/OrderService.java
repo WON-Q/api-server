@@ -12,14 +12,18 @@ import com.fisa.wonq.merchant.exception.MerchantException;
 import com.fisa.wonq.merchant.repository.DiningTableRepository;
 import com.fisa.wonq.merchant.repository.MenuOptionRepository;
 import com.fisa.wonq.merchant.repository.MenuRepository;
+import com.fisa.wonq.order.controller.dto.req.OrderPrepareRequest;
 import com.fisa.wonq.order.controller.dto.req.OrderRequest;
 import com.fisa.wonq.order.controller.dto.res.OrderDetailResponse;
+import com.fisa.wonq.order.controller.dto.res.OrderPrepareResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderResponse;
 import com.fisa.wonq.order.domain.Order;
 import com.fisa.wonq.order.domain.OrderMenu;
 import com.fisa.wonq.order.domain.OrderMenuOption;
 import com.fisa.wonq.order.domain.PaymentResult;
 import com.fisa.wonq.order.domain.enums.OrderMenuStatus;
+import com.fisa.wonq.order.domain.enums.OrderStatus;
+import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import com.fisa.wonq.order.repository.OrderMenuRepository;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -211,5 +216,85 @@ public class OrderService {
         }
 
         om.setStatus(newStatus);
+    }
+
+    @Transactional
+    public OrderPrepareResponse prepareOrder(OrderPrepareRequest req) {
+        // 1) 테이블 존재 확인 (상태 변경 없음)
+        DiningTable table = tableRepo.findByDiningTableId(req.getTableId())
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.TABLE_NOT_FOUND));
+
+        // 2) 총 금액 계산
+        int totalAmount = calculateTotal(req.getMenus());
+
+        // 3) Order 생성 (ORDERED + PENDING)
+        String orderCode = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyMMdd'T'HHmmss"))
+                + "_t" + table.getTableNumber();
+
+        Order order = Order.builder()
+                .orderCode(orderCode)
+                .orderStatus(OrderStatus.ORDERED)
+                .paymentMethod(req.getPaymentMethod())
+                .paymentStatus(PaymentStatus.PENDING)
+                .totalAmount(totalAmount)
+                .diningTable(table)
+                .build();
+
+        // 4) 메뉴·옵션 매핑
+        for (OrderPrepareRequest.OrderMenu omReq : req.getMenus()) {
+            var menu = menuRepo.findById(omReq.getMenuId())
+                    .orElseThrow(() -> new MenuException(MenuErrorCode.MENU_NOT_FOUND));
+
+            OrderMenu om = OrderMenu.builder()
+                    .menu(menu)
+                    .quantity(omReq.getQuantity())
+                    .unitPrice(menu.getPrice())
+                    .totalPrice(menu.getPrice() * omReq.getQuantity())
+                    .build();
+
+            if (omReq.getOptionIds() != null) {
+                for (Long optId : omReq.getOptionIds()) {
+                    var mo = menuOptionRepo.findById(optId)
+                            .orElseThrow(() -> new MerchantException(MerchantErrorCode.OPTION_NOT_FOUND));
+                    OrderMenuOption omo = OrderMenuOption.builder()
+                            .menuOption(mo)
+                            .optionPrice(mo.getOptionPrice())
+                            .build();
+                    om.addOption(omo);
+                    om.setTotalPrice(om.getTotalPrice() + mo.getOptionPrice());
+                }
+            }
+            order.addOrderMenu(om);
+        }
+
+        // 5) 저장
+        Order saved = orderRepo.save(order);
+
+        // 6) 응답 반환
+        return OrderPrepareResponse.builder()
+                .orderCode(saved.getOrderCode())
+                .merchantId(saved.getDiningTable().getMerchant().getMerchantId())
+                .tableId(saved.getDiningTable().getDiningTableId())
+                .createdAt(saved.getCreatedAt())
+                .orderStatus(saved.getOrderStatus())
+                .totalAmount(saved.getTotalAmount())
+                .build();
+    }
+
+    private int calculateTotal(List<OrderPrepareRequest.OrderMenu> menus) {
+        return menus.stream()
+                .mapToInt(om -> {
+                    int sum = menuRepo.findById(om.getMenuId())
+                            .orElseThrow().getPrice() * om.getQuantity();
+                    if (om.getOptionIds() != null) {
+                        for (Long optId : om.getOptionIds()) {
+                            sum += menuOptionRepo.findById(optId)
+                                    .orElseThrow().getOptionPrice();
+                        }
+                    }
+                    return sum;
+                })
+                .sum();
     }
 }

@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @Builder
 @Schema(description = "결제 준비 응답 DTO")
 public class OrderPrepareResponse {
-    @Schema(description = "주문 PK ID", example = "123")
-    private Long orderId;
+    @Schema(description = "고유 주문 코드")
+    private String orderCode;
 
     @Schema(description = "가맹점 ID", example = "10")
     private Long merchantId;

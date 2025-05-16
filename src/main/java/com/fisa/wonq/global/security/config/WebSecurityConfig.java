@@ -135,7 +135,8 @@ public class WebSecurityConfig {
                 antMatcher("/api/v1/auth/checkAccountId"),
                 antMatcher("/api/v1/auth/login"),
                 antMatcher("/api/v1/merchant/image"),
-                antMatcher("/api/v1/merchant/menus/{merchantId}/list")
+                antMatcher("/api/v1/merchant/menus/{merchantId}/list"),
+                antMatcher("/api/v1/orders/prepare")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }
