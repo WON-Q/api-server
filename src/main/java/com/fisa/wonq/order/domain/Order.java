@@ -55,8 +55,8 @@ public class Order extends BaseDateTimeEntity {
     private DiningTable diningTable;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     @Fetch(FetchMode.SUBSELECT)
+    @Builder.Default
     private List<OrderMenu> orderMenus = new ArrayList<>();
 
     /**

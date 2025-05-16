@@ -302,4 +302,12 @@ public class OrderService {
                 })
                 .sum();
     }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse getOrderByCode(String orderCode) {
+        Order order = orderRepo
+                .findWithDetailsByOrderCode(orderCode)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid orderCode: " + orderCode));
+        return toDto(order);  // 기존에 정의된 변환 메서드
+    }
 }

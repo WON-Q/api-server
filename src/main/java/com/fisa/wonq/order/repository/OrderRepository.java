@@ -47,4 +47,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                 memberId, from, to, min, max, pageable
         );
     }
+
+    /**
+     * orderMenus만 join fetch, 옵션은 SUBSELECT로 로딩
+     */
+    @EntityGraph(attributePaths = {
+            "orderMenus"
+    })
+    Optional<Order> findWithDetailsByOrderCode(String orderCode);
 }

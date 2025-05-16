@@ -3,6 +3,8 @@ package com.fisa.wonq.merchant.domain;
 import com.fisa.wonq.order.domain.OrderMenuOption;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,7 @@ public class MenuOption {
 
     @OneToMany(mappedBy = "menuOption", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @Fetch(FetchMode.SUBSELECT)
     private List<OrderMenuOption> orderMenuOptions = new ArrayList<>();
 
     /**
