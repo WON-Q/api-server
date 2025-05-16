@@ -54,12 +54,18 @@ public class MerchantService {
     // 테이블 추가
     @Transactional
     public DiningTableResponse addDiningTable(Account account, DiningTableRequest req) {
-        // 현재 로그인한 회원의 매장 찾기
-        Merchant merchant = merchantRepository
-                .findByMemberMemberId(account.id())
+        // 1) 매장 조회
+        Merchant merchant = merchantRepository.findByMemberMemberId(account.id())
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
 
-        // 테이블 엔티티 생성
+        // 2) 중복 테이블 번호 검증
+        boolean exists = diningTableRepository
+                .existsByMerchant_Member_MemberIdAndTableNumber(account.id(), req.getTableNumber());
+        if (exists) {
+            throw new MerchantException(MerchantErrorCode.DUPLICATE_TABLE_NUMBER);
+        }
+
+        // 3) 엔티티 생성 & 저장
         DiningTable table = DiningTable.builder()
                 .merchant(merchant)
                 .tableNumber(req.getTableNumber())
@@ -71,7 +77,6 @@ public class MerchantService {
                 .locationH(req.getLocationH())
                 .build();
 
-        // 저장
         diningTableRepository.save(table);
 
         return new DiningTableResponse(table.getDiningTableId());
