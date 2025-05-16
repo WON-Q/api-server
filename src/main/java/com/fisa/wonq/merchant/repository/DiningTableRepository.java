@@ -16,4 +16,6 @@ public interface DiningTableRepository extends JpaRepository<DiningTable, Long> 
     Optional<DiningTable> findByDiningTableIdAndMerchant_Member_MemberId(Long tableId, Long memberId);
 
     Optional<DiningTable> findByDiningTableId(Long diningTableId);
+
+    boolean existsByMerchant_Member_MemberIdAndTableNumber(Long memberId, Integer tableNumber);
 }
