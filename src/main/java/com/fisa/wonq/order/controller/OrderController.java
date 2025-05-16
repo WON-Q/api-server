@@ -5,8 +5,10 @@ import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
 import com.fisa.wonq.order.controller.dto.req.ChangeOrderMenuStatusRequest;
+import com.fisa.wonq.order.controller.dto.req.OrderPrepareRequest;
 import com.fisa.wonq.order.controller.dto.req.OrderRequest;
 import com.fisa.wonq.order.controller.dto.res.OrderDetailResponse;
+import com.fisa.wonq.order.controller.dto.res.OrderPrepareResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderResponse;
 import com.fisa.wonq.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +38,16 @@ public class OrderController {
     ) {
         OrderResponse resp = orderService.createOrder(request);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, resp));
+    }
+
+    @PostMapping("/prepare")
+    @Operation(summary = "결제 준비(주문 생성 - 주문 대기 상태)",
+            description = "주문 정보를 ORDERED/PENDING 상태로 저장하고, 결제 요청에 필요한 데이터를 반환합니다.")
+    public ResponseEntity<ApiResponse<OrderPrepareResponse>> prepareOrder(
+            @RequestBody OrderPrepareRequest req
+    ) {
+        OrderPrepareResponse resp = orderService.prepareOrder(req);
+        return ResponseEntity.ok(ApiResponse.of(resp));
     }
 
     @GetMapping("/daily")
@@ -85,6 +97,18 @@ public class OrderController {
     ) {
         orderService.changeOrderMenuStatus(account.id(), orderMenuId, req.getStatus());
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS));
+    }
+
+    @GetMapping("/code/{orderCode}")
+    @Operation(
+            summary = "주문 코드로 주문 내역 조회",
+            description = "orderCode를 받아 그 주문의 메뉴·옵션·결제 정보를 반환합니다."
+    )
+    public ResponseEntity<ApiResponse<OrderDetailResponse>> getByCode(
+            @PathVariable String orderCode
+    ) {
+        OrderDetailResponse dto = orderService.getOrderByCode(orderCode);
+        return ResponseEntity.ok(ApiResponse.of(dto));
     }
 }
 

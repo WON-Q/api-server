@@ -2,6 +2,8 @@ package com.fisa.wonq.merchant.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,7 @@ public class MenuOptionGroup {
 
     @OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @Fetch(FetchMode.SUBSELECT)
     private List<MenuOption> options = new ArrayList<>();
 
     /**

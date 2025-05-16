@@ -5,6 +5,8 @@ import com.fisa.wonq.merchant.domain.Menu;
 import com.fisa.wonq.order.domain.enums.OrderMenuStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,7 @@ public class OrderMenu extends BaseDateTimeEntity {
     private Order order;
 
     @OneToMany(mappedBy = "orderMenu", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SUBSELECT)
     @Builder.Default
     private List<OrderMenuOption> orderMenuOptions = new ArrayList<>();
 

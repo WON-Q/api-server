@@ -14,4 +14,6 @@ public interface DiningTableRepository extends JpaRepository<DiningTable, Long> 
      * 없으면 Optional.empty().
      */
     Optional<DiningTable> findByDiningTableIdAndMerchant_Member_MemberId(Long tableId, Long memberId);
+
+    Optional<DiningTable> findByDiningTableId(Long diningTableId);
 }

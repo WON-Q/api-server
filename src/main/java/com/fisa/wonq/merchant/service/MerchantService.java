@@ -218,4 +218,16 @@ public class MerchantService {
                 .capacity(table.getCapacity())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public MerchantOverviewResponse getMerchantOverview(Long merchantId) {
+        Merchant m = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new MerchantException(MerchantErrorCode.MERCHANT_NOT_FOUND));
+
+        return MerchantOverviewResponse.builder()
+                .merchantId(m.getMerchantId())
+                .merchantName(m.getMerchantName())
+                .merchantImgUrl(m.getMerchantImg())
+                .build();
+    }
 }
