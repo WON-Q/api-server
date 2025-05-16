@@ -27,6 +27,7 @@ import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import com.fisa.wonq.order.repository.OrderMenuRepository;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -240,6 +242,9 @@ public class OrderService {
                 .totalAmount(totalAmount)
                 .diningTable(table)
                 .build();
+
+        log.debug("Preparing order: table={}, items={}, paymentMethod={}",
+                req.getTableId(), req.getMenus().size(), req.getPaymentMethod());
 
         // 4) 메뉴·옵션 매핑
         for (OrderPrepareRequest.OrderMenu omReq : req.getMenus()) {
