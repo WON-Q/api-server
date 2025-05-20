@@ -66,4 +66,23 @@ public class Order extends BaseDateTimeEntity {
         orderMenus.add(om);
         om.setOrder(this);
     }
+
+    /**
+     * 주문 상태를 업데이트하는 메서드
+     *
+     * @param orderStatus 업데이트할 주문 상태
+     */
+    public void updateOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    /**
+     * 결제 상태를 업데이트하는 메서드
+     *
+     * @param paymentStatus 업데이트할 결제 상태
+     */
+    public void updatePaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
 }
