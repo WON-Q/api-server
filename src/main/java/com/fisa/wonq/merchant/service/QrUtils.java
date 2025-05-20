@@ -15,14 +15,15 @@ import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
-public class QrService {
+public class QrUtils {
 
     private final S3UploadService s3UploadService;
-    
+    private final QrCodeService qrCodeService;
+
     /**
-     * targetUrl을 QR 코드(PNG)로 생성하여 S3에 업로드 후 URL 반환
+     * targetUrl을 QR 코드(PNG)로 생성하여 S3에 업로드, DB에 저장 후 URL 반환
      */
-    public String generateQrCodeAndUpload(String targetUrl) {
+    public String generateQrCodeAndUpload(Long memberId, String targetUrl) {
         try {
             // QR 코드 생성
             BitMatrix matrix = new MultiFormatWriter()
@@ -33,13 +34,13 @@ public class QrService {
             MatrixToImageWriter.writeToStream(matrix, "PNG", baos);
             byte[] pngData = baos.toByteArray();
 
-            // byte[], 파일명, contentType 을 넘겨 업로드
-            return s3UploadService.upload(
-                    pngData,
-                    "qr-code.png",
-                    "image/png"
-            );
+            // S3에 업로드
+            String imageUrl = s3UploadService.upload(pngData, "qr-code.png", "image/png");
 
+            // DB에 QR 기록 저장
+            qrCodeService.saveQrCode(memberId, targetUrl, imageUrl);
+
+            return imageUrl;
         } catch (WriterException | IOException e) {
             throw new ValidationException("QR 코드 생성 또는 업로드 실패: " + e.getMessage(), e);
         }

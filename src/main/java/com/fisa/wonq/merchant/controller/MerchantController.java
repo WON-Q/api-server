@@ -7,7 +7,8 @@ import com.fisa.wonq.global.security.resolver.CurrentAccount;
 import com.fisa.wonq.merchant.controller.dto.req.*;
 import com.fisa.wonq.merchant.controller.dto.res.*;
 import com.fisa.wonq.merchant.service.MerchantService;
-import com.fisa.wonq.merchant.service.QrService;
+import com.fisa.wonq.merchant.service.QrCodeService;
+import com.fisa.wonq.merchant.service.QrUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
@@ -26,7 +27,8 @@ import java.util.List;
 public class MerchantController {
 
     private final MerchantService merchantService;
-    private final QrService qrService;
+    private final QrCodeService qrCodeService;
+    private final QrUtils qrUtils;
 
 
     @GetMapping("/info")
@@ -95,13 +97,32 @@ public class MerchantController {
             description = "메뉴 전체 목록 페이지 URL을 받아 QR 코드를 생성, S3에 업로드한 뒤 해당 이미지 URL을 반환합니다."
     )
     public ResponseEntity<ApiResponse<QrCodeResponse>> generateQr(
+            @CurrentAccount Account account,
             @Valid @RequestBody QrCodeRequest request
     ) {
-        String imageUrl = qrService.generateQrCodeAndUpload(request.getTargetUrl());
+        String imageUrl = qrUtils.generateQrCodeAndUpload(account.id(), request.getTargetUrl());
         QrCodeResponse resp = QrCodeResponse.builder()
                 .qrCodeImageUrl(imageUrl)
                 .build();
         return ResponseEntity.ok(ApiResponse.of(resp));
+    }
+
+    @GetMapping("/qr")
+    @Operation(summary = "가맹점 QR 목록 조회",
+            description = "현재 로그인된 가맹점에 생성된 모든 QR 정보를 반환합니다.")
+    public ResponseEntity<ApiResponse<List<QrCodeInfoResponse>>> listQrs(
+            @CurrentAccount Account account
+    ) {
+        var qrCodes = qrCodeService.getQrCodes(account.id());
+        var dtos = qrCodes.stream()
+                .map(qr -> QrCodeInfoResponse.builder()
+                        .id(qr.getId())
+                        .targetUrl(qr.getTargetUrl())
+                        .imageUrl(qr.getImageUrl())
+                        .createdAt(qr.getCreatedAt())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(ApiResponse.of(dtos));
     }
 
     @PatchMapping("/info")
