@@ -16,6 +16,9 @@ public class OrderPrepareRequest {
     @Schema(description = "테이블 ID", example = "1", required = true)
     private Long tableId;
 
+    @Schema(description = "가맹점 ID", example = "1", required = true)
+    private Long merchantId;
+
     @Schema(description = "주문할 메뉴 목록", required = true)
     private List<OrderMenu> menus;
 
