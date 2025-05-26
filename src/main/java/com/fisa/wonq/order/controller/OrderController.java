@@ -10,6 +10,7 @@ import com.fisa.wonq.order.controller.dto.req.OrderRequest;
 import com.fisa.wonq.order.controller.dto.res.OrderDetailResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderPrepareResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderResponse;
+import com.fisa.wonq.order.controller.dto.res.OrderVerifyResponse;
 import com.fisa.wonq.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -109,6 +110,19 @@ public class OrderController {
     ) {
         OrderDetailResponse dto = orderService.getOrderByCode(orderCode);
         return ResponseEntity.ok(ApiResponse.of(dto));
+    }
+
+    @PostMapping("/code/{orderCode}/verify")
+    @Operation(
+            summary = "주문 결제 검증",
+            description = "PG사 결제 검증 API를 호출하여 결제 상태를 확인하고 주문 상태를 업데이트합니다."
+    )
+    public ResponseEntity<ApiResponse<OrderVerifyResponse>> verifyOrder(
+            @PathVariable String orderCode,
+            @RequestParam String transactionId
+    ) {
+        OrderVerifyResponse response = orderService.verifyOrder(orderCode, transactionId);
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, response));
     }
 }
 
