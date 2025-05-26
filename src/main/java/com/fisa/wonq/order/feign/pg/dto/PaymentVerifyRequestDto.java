@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * PG사로 결제 검증 요청 DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor
