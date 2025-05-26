@@ -37,6 +37,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -140,10 +141,14 @@ public class OrderService {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.plusDays(1).atStartOfDay().minusNanos(1);
 
-        return orderRepo
-                .findByMerchantAndCreatedAtBetweenAndAmountRange(memberId, start, end, minAmount, maxAmount, pageable)
-                .map(this::toDto);
+
+        Page<Order> page = orderRepo.findByMerchantAndCreatedAtBetweenAndAmountRange(
+                memberId, start, end, minAmount, maxAmount, pageable
+        );
+
+        return page.map(this::toDto);
     }
+
 
     /**
      * 해당 연·월(1일 00:00 ~ 말일 23:59:59) 주문 조회
@@ -167,15 +172,21 @@ public class OrderService {
     }
 
     private OrderDetailResponse toDto(Order order) {
+
+
         var menus = order.getOrderMenus().stream().map(om -> {
+            // 옵션 수 확인
             var opts = om.getOrderMenuOptions().stream()
-                    .map(o -> OrderDetailResponse.OrderMenuOptionResponse.builder()
-                            .orderMenuOptionId(o.getOrderMenuOptionId())
-                            .menuOptionId(o.getMenuOption().getMenuOptionId())
-                            .optionName(o.getMenuOption().getOptionName())
-                            .optionPrice(o.getOptionPrice())
-                            .build())
-                    .toList();
+                    .map(o -> {
+                        return OrderDetailResponse.OrderMenuOptionResponse.builder()
+                                .orderMenuOptionId(o.getOrderMenuOptionId())
+                                .menuOptionId(o.getMenuOption().getMenuOptionId())
+                                .optionName(o.getMenuOption().getOptionName())
+                                .optionPrice(o.getOptionPrice())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
             return OrderDetailResponse.OrderMenuResponse.builder()
                     .orderMenuId(om.getOrderMenuId())
                     .menuId(om.getMenu().getMenuId())
@@ -186,7 +197,7 @@ public class OrderService {
                     .status(om.getStatus())
                     .options(opts)
                     .build();
-        }).toList();
+        }).collect(Collectors.toList());
 
         return OrderDetailResponse.builder()
                 .orderCode(order.getOrderCode())
@@ -223,7 +234,7 @@ public class OrderService {
     @Transactional
     public OrderPrepareResponse prepareOrder(OrderPrepareRequest req) {
         // 1) 테이블 존재 확인 (상태 변경 없음)
-        DiningTable table = tableRepo.findByDiningTableId(req.getTableId())
+        DiningTable table = tableRepo.findByMerchant_MerchantIdAndTableNumber(req.getMerchantId(), req.getTableId().intValue())
                 .orElseThrow(() -> new MerchantException(MerchantErrorCode.TABLE_NOT_FOUND));
 
         // 2) 총 금액 계산
@@ -243,8 +254,7 @@ public class OrderService {
                 .diningTable(table)
                 .build();
 
-        log.debug("Preparing order: table={}, items={}, paymentMethod={}",
-                req.getTableId(), req.getMenus().size(), req.getPaymentMethod());
+
 
         // 4) 메뉴·옵션 매핑
         for (OrderPrepareRequest.OrderMenu omReq : req.getMenus()) {
