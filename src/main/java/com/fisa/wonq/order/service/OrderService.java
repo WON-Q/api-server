@@ -371,6 +371,7 @@ public class OrderService {
                 throw new IllegalStateException("Unexpected payment status: " + result.getStatus());
 
         }
+         orderRepo.save(order);
 
         return OrderVerifyResponse.builder()
                 .orderCode(order.getOrderCode())
