@@ -17,19 +17,25 @@ import com.fisa.wonq.order.controller.dto.req.OrderRequest;
 import com.fisa.wonq.order.controller.dto.res.OrderDetailResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderPrepareResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderResponse;
+import com.fisa.wonq.order.controller.dto.res.OrderVerifyResponse;
 import com.fisa.wonq.order.domain.Order;
 import com.fisa.wonq.order.domain.OrderMenu;
 import com.fisa.wonq.order.domain.OrderMenuOption;
-import com.fisa.wonq.order.domain.PaymentResult;
 import com.fisa.wonq.order.domain.enums.OrderMenuStatus;
 import com.fisa.wonq.order.domain.enums.OrderStatus;
 import com.fisa.wonq.order.domain.enums.PaymentStatus;
+import com.fisa.wonq.order.exception.OrderNotFoundException;
+import com.fisa.wonq.order.feign.pg.PgFeignClient;
+import com.fisa.wonq.order.feign.pg.dto.BaseResponse;
+import com.fisa.wonq.order.feign.pg.dto.PaymentDto;
 import com.fisa.wonq.order.repository.OrderMenuRepository;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +44,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.fisa.wonq.order.feign.pg.dto.PaymentStatus.*;
 
 @Slf4j
 @Service
@@ -49,7 +57,7 @@ public class OrderService {
     private final MenuOptionRepository menuOptionRepo;
     private final OrderRepository orderRepo;
     private final OrderMenuRepository orderMenuRepo;
-    private final PaymentService paymentService;
+    private final PgFeignClient pgFeignClient;
 
     /**
      * 주문 생성(결제 요청)
@@ -66,25 +74,19 @@ public class OrderService {
                 .format(DateTimeFormatter.ofPattern("yyMMdd'T'HHmm"))
                 + "_t" + table.getTableNumber();
 
-        // 3. PG 결제 요청 (스텁)
-        PaymentResult payResult = paymentService.charge(
-                orderCode,
-                req.getTotalAmount(),
-                req.getPaymentMethod()
-        );
-        // TODO: 세부적인 결제 에러 핸들링 필요(스텁 단계에서는 일단 String으로 처리)
-        if (!payResult.isSuccess()) {
-            throw new IllegalStateException("PAYMENT_FAILED");
-        }
+        // 3. 결제 정보 준비 (다이어그램 Step 3)
+        // 다이어그램에 따르면 PG사 결제는 원큐 오더 웹에서 처리됨
+        // PaymentResult나 paymentService는 제거하고 Order 객체만 생성
+        // 이 시점에서는 결제가 완료되지 않았으므로 ORDERED 상태와 PENDING 상태로 설정
+
 
         // 4. Order 엔티티 생성 (결제 완료 정보 반영)
         Order order = Order.builder()
                 .orderCode(orderCode)
                 .totalAmount(req.getTotalAmount())
-                .orderStatus(com.fisa.wonq.order.domain.enums.OrderStatus.PAID)
-                .paymentStatus(com.fisa.wonq.order.domain.enums.PaymentStatus.COMPLETED)
+                .orderStatus(OrderStatus.PAID)
+                .paymentStatus(PaymentStatus.COMPLETED)
                 .paymentMethod(req.getPaymentMethod())
-                .paidAt(payResult.getPaidAt())
                 .diningTable(table)
                 .build();
 
@@ -123,7 +125,6 @@ public class OrderService {
         return OrderResponse.builder()
                 .orderCode(order.getOrderCode())
                 .totalAmount(order.getTotalAmount())
-                .paymentTransactionId(payResult.getTransactionId())
                 .build();
     }
 
@@ -320,4 +321,61 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid orderCode: " + orderCode));
         return toDto(order);  // 기존에 정의된 변환 메서드
     }
+
+    /**
+     * 주문을 검증하는 메서드
+     * <p>
+     * PG사 API를 호출하여 결제 상태를 검증하고, 주문 상태를 업데이트합니다.
+     */
+    @Transactional
+    public OrderVerifyResponse verifyOrder(String orderCode) {
+        Order order = orderRepo.findByOrderCode(orderCode)
+                .orElseThrow(() -> new OrderNotFoundException(orderCode));
+
+        ResponseEntity<BaseResponse<PaymentDto>> response = pgFeignClient.getPaymentByOrderCode(orderCode);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new IllegalStateException("Failed to verify payment with PG: " + response.getStatusCode());
+        }
+
+        if (response.getBody() == null || response.getBody().getData() == null) {
+            throw new IllegalStateException("Invalid response from PG: " + response.getBody());
+        }
+
+        PaymentDto data = response.getBody().getData();
+
+        String message;
+        switch (data.getPaymentStatus()) {
+            case SUCCEEDED:
+                order.updateOrderStatus(OrderStatus.PAID);
+                order.updatePaymentStatus(PaymentStatus.COMPLETED);
+                message = "성공적으로 결제되었습니다";
+                break;
+            case CANCELLED:
+                order.updateOrderStatus(OrderStatus.CANCELED);
+                order.updatePaymentStatus(PaymentStatus.CANCELED);
+                message = "결제가 취소되었습니다";
+                break;
+            case FAILED:
+            case EXPIRED:
+                order.updateOrderStatus(OrderStatus.CANCELED);
+                order.updatePaymentStatus(PaymentStatus.FAILED);
+                message = "결제가 실패했습니다";
+                break;
+            default:
+                throw new IllegalStateException("Unexpected payment status: " + data.getPaymentStatus());
+
+        }
+
+        orderRepo.save(order);
+
+        return OrderVerifyResponse.builder()
+                .orderCode(order.getOrderCode())
+                .orderStatus(order.getOrderStatus())
+                .paymentStatus(order.getPaymentStatus())
+                .verifiedAt(LocalDateTime.now())
+                .message(message)
+                .build();
+    }
+
 }
