@@ -3,10 +3,13 @@ package com.fisa.wonq.order.feign.pg;
 import com.fisa.wonq.global.config.feign.PgClientConfig;
 import com.fisa.wonq.order.feign.pg.dto.BaseResponse;
 import com.fisa.wonq.order.feign.pg.dto.PaymentDto;
+import com.fisa.wonq.order.feign.pg.dto.RefundRequestDto;
+import com.fisa.wonq.order.feign.pg.dto.RefundResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(name = "pgClient", url = "${app.pg.endpoint}", configuration = PgClientConfig.class)
@@ -21,5 +24,16 @@ public interface PgFeignClient {
     @PostMapping("/api/payments/verify")
     ResponseEntity<BaseResponse<PaymentDto>> getPaymentByOrderCode(
             @PathVariable("orderCode") String orderCode
+    );
+
+    /**
+     * 결제 환불 API
+     *
+     * @param dto 환불 요청 DTO
+     * @return 환불 처리 응답
+     */
+    @PostMapping("/api/payments/refund")
+    ResponseEntity<BaseResponse<RefundResponseDto>> refundPayment(
+            @RequestBody RefundRequestDto dto
     );
 }

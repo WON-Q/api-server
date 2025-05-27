@@ -7,6 +7,7 @@ import com.fisa.wonq.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -51,6 +52,7 @@ public class WebSecurityConfig {
      * permitAll 권한을 가진 엔드포인트에 적용되는 SecurityFilterChain
      */
     @Bean
+    @Order(1)
     public SecurityFilterChain securityFilterChainPermitAll(HttpSecurity http) throws Exception {
         configureCommonSecuritySettings(http);
         http.securityMatchers(matchers -> matchers.requestMatchers(requestPermitAll()))
@@ -64,6 +66,7 @@ public class WebSecurityConfig {
      * 인증 및 인가가 필요한 엔드포인트에 적용되는 SecurityFilterChain 입니다.
      */
     @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChainAuthorized(HttpSecurity http) throws Exception {
         configureCommonSecuritySettings(http);
         http
@@ -86,6 +89,7 @@ public class WebSecurityConfig {
      * 위에서 정의된 엔드포인트 이외에는 authenticated로 설정
      */
     @Bean
+    @Order(3)
     public SecurityFilterChain securityFilterChainDefault(HttpSecurity http) throws Exception {
         configureCommonSecuritySettings(http);
         http
@@ -139,7 +143,8 @@ public class WebSecurityConfig {
                 antMatcher("/api/v1/orders/prepare"),
                 antMatcher("/api/v1/merchant/{merchantId}/overview"),
                 antMatcher("/api/v1/orders/code/{orderCode}"),
-                antMatcher("/api/orders/verify")
+                antMatcher("/api/orders/verify"),
+                antMatcher("/api/orders/refund")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }
