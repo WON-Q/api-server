@@ -19,8 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {
             "orderMenus",
             "orderMenus.menu",
-            "orderMenus.orderMenuOptions",
-            "orderMenus.orderMenuOptions.menuOption",
             "diningTable"
     })
     Page<Order> findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetweenAndTotalAmountBetween(
@@ -40,7 +38,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             Integer maxAmount,
             Pageable pageable
     ) {
-        // null 처리: minAmount가 없으면 0, maxAmount가 없으면 Integer.MAX_VALUE
         int min = minAmount != null ? minAmount : 0;
         int max = maxAmount != null ? maxAmount : Integer.MAX_VALUE;
         return findByDiningTable_Merchant_Member_MemberIdAndCreatedAtBetweenAndTotalAmountBetween(

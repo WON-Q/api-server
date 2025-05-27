@@ -13,7 +13,7 @@ import lombok.*;
 public class QrCodeRequest {
     @NotBlank
     @Schema(description = "QR 코드에 담을 대상 URL",
-            example = "https://your-frontend.com/merchant/42/menu",
+            example = "https://your-frontend.com/merchantId/tableId/menus",
             required = true)
     private String targetUrl;
 }

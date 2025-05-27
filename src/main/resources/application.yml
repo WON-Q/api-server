@@ -1,3 +1,5 @@
 spring:
+  application:
+    name: won-q-server
   config:
     import: classpath:secret.yml

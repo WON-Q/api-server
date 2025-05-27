@@ -89,6 +89,7 @@ public class Merchant extends BaseDateTimeEntity {
         menu.setMerchant(this);
     }
 
+
     public void setMember(Member member) {
         this.member = member;
     }

@@ -118,10 +118,9 @@ public class OrderController {
             description = "PG사 결제 검증 API를 호출하여 결제 상태를 확인하고 주문 상태를 업데이트합니다."
     )
     public ResponseEntity<ApiResponse<OrderVerifyResponse>> verifyOrder(
-            @PathVariable String orderCode,
-            @RequestParam String transactionId
+            @PathVariable String orderCode
     ) {
-        OrderVerifyResponse response = orderService.verifyOrder(orderCode, transactionId);
+        OrderVerifyResponse response = orderService.verifyOrder(orderCode);
         return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS, response));
     }
 }
