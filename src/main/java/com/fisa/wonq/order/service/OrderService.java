@@ -27,13 +27,11 @@ import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import com.fisa.wonq.order.exception.OrderNotFoundException;
 import com.fisa.wonq.order.feign.pg.PgFeignClient;
 import com.fisa.wonq.order.feign.pg.dto.BaseResponse;
-import com.fisa.wonq.order.feign.pg.dto.PaymentVerifyRequestDto;
-import com.fisa.wonq.order.feign.pg.dto.PaymentVerifyResponseDto;
+import com.fisa.wonq.order.feign.pg.dto.PaymentDto;
 import com.fisa.wonq.order.repository.OrderMenuRepository;
 import com.fisa.wonq.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -46,6 +44,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import static com.fisa.wonq.order.feign.pg.dto.PaymentStatus.*;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -57,9 +57,6 @@ public class OrderService {
     private final OrderRepository orderRepo;
     private final OrderMenuRepository orderMenuRepo;
     private final PgFeignClient pgFeignClient;
-
-    @Value("${app.pg.auth-token}")
-    private String pgAuthToken;
 
     /**
      * 주문 생성(결제 요청)
@@ -321,57 +318,46 @@ public class OrderService {
      * PG사 API를 호출하여 결제 상태를 검증하고, 주문 상태를 업데이트합니다.
      */
     @Transactional
-    public OrderVerifyResponse verifyOrder(String orderCode, String transactionId) {
+    public OrderVerifyResponse verifyOrder(String orderCode) {
         Order order = orderRepo.findByOrderCode(orderCode)
                 .orElseThrow(() -> new OrderNotFoundException(orderCode));
 
-        log.info("현재 주문 상태: {}", order.getOrderStatus());
-        log.info("현재 결제 상태: {}", order.getPaymentStatus());
+        ResponseEntity<BaseResponse<PaymentDto>> response = pgFeignClient.getPaymentByOrderCode(orderCode);
 
-
-        if (order.getPaymentStatus() != PaymentStatus.PENDING) {
-            throw new IllegalStateException("Invalid order status for verification");
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new IllegalStateException("Failed to verify payment with PG: " + response.getStatusCode());
         }
 
-        log.info("Verifying orderCode={}, txId={}", orderCode, transactionId);
-
-        PaymentVerifyRequestDto verifyRequest = new PaymentVerifyRequestDto(transactionId);
-
-        ResponseEntity<BaseResponse<PaymentVerifyResponseDto>> response =
-                pgFeignClient.verifyPayment(pgAuthToken, verifyRequest);
-
-           if (response.getStatusCode() != HttpStatus.OK || !response.getBody().getIsSuccess()) {
-            throw new IllegalStateException("Payment verification failed");
+        if (response.getBody() == null || response.getBody().getData() == null) {
+            throw new IllegalStateException("Invalid response from PG: " + response.getBody());
         }
 
-        PaymentVerifyResponseDto result = response.getBody().getData();
-
-        log.info("PG verify result status = {}", result.getStatus());
+        PaymentDto data = response.getBody().getData();
 
         String message;
-
-        switch (result.getStatus()) {
+        switch (data.getPaymentStatus()) {
             case SUCCEEDED:
                 order.updateOrderStatus(OrderStatus.PAID);
                 order.updatePaymentStatus(PaymentStatus.COMPLETED);
-                message = "Payment verified successfully";
+                message = "성공적으로 결제되었습니다";
                 break;
-            case CANCELED:
+            case CANCELLED:
                 order.updateOrderStatus(OrderStatus.CANCELED);
                 order.updatePaymentStatus(PaymentStatus.CANCELED);
-                message = "Payment was canceled";
+                message = "결제가 취소되었습니다";
                 break;
             case FAILED:
             case EXPIRED:
                 order.updateOrderStatus(OrderStatus.CANCELED);
                 order.updatePaymentStatus(PaymentStatus.FAILED);
-                message = "Payment verification failed: " + result.getStatus();
+                message = "결제가 실패했습니다";
                 break;
             default:
-                throw new IllegalStateException("Unexpected payment status: " + result.getStatus());
+                throw new IllegalStateException("Unexpected payment status: " + data.getPaymentStatus());
 
         }
-         orderRepo.save(order);
+
+        orderRepo.save(order);
 
         return OrderVerifyResponse.builder()
                 .orderCode(order.getOrderCode())
