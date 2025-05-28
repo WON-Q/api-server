@@ -291,7 +291,7 @@ public class OrderService {
         return OrderPrepareResponse.builder()
                 .orderCode(saved.getOrderCode())
                 .merchantId(saved.getDiningTable().getMerchant().getMerchantId())
-                .tableId(saved.getDiningTable().getDiningTableId())
+                .tableId(req.getTableId())
                 .createdAt(saved.getCreatedAt())
                 .orderStatus(saved.getOrderStatus())
                 .totalAmount(saved.getTotalAmount())
