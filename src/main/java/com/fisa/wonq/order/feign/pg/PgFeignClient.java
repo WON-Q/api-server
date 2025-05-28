@@ -7,10 +7,7 @@ import com.fisa.wonq.order.feign.pg.dto.RefundRequestDto;
 import com.fisa.wonq.order.feign.pg.dto.RefundResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "pgClient", url = "${app.pg.endpoint}", configuration = PgClientConfig.class)
 public interface PgFeignClient {
@@ -21,7 +18,7 @@ public interface PgFeignClient {
      * @param orderCode 주문 코드
      * @return
      */
-    @PostMapping("/api/payments/verify")
+    @GetMapping("/payments/orders/{orderCode}")
     ResponseEntity<BaseResponse<PaymentDto>> getPaymentByOrderCode(
             @PathVariable("orderCode") String orderCode
     );
