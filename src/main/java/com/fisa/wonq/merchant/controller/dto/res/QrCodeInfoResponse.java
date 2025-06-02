@@ -24,4 +24,7 @@ public class QrCodeInfoResponse {
 
     @Schema(description = "생성 일시")
     private LocalDateTime createdAt;
+
+    @Schema(description = "qr코드와 연결된 dining_tableid" ,example="10")
+    private Long diningTableId;
 }
