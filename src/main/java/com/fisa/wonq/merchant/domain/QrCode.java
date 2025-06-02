@@ -24,4 +24,7 @@ public class QrCode extends BaseDateTimeEntity {
 
     @Column(nullable = false)
     private String imageUrl;
+
+    @Column(nullable = false)
+    private Long diningTableId;
 }
