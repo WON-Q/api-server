@@ -23,7 +23,7 @@ public class QrUtils {
     /**
      * targetUrl을 QR 코드(PNG)로 생성하여 S3에 업로드, DB에 저장 후 URL 반환
      */
-    public String generateQrCodeAndUpload(Long memberId, String targetUrl) {
+    public String generateQrCodeAndUpload(Long memberId, String targetUrl,Integer tableNumber) {
         try {
             // QR 코드 생성
             BitMatrix matrix = new MultiFormatWriter()
@@ -38,7 +38,7 @@ public class QrUtils {
             String imageUrl = s3UploadService.upload(pngData, "qr-code.png", "image/png");
 
             // DB에 QR 기록 저장
-            qrCodeService.saveQrCode(memberId, targetUrl, imageUrl);
+            qrCodeService.saveQrCode(memberId, targetUrl, imageUrl,tableNumber);
 
             return imageUrl;
         } catch (WriterException | IOException e) {

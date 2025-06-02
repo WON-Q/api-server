@@ -100,7 +100,7 @@ public class MerchantController {
             @CurrentAccount Account account,
             @Valid @RequestBody QrCodeRequest request
     ) {
-        String imageUrl = qrUtils.generateQrCodeAndUpload(account.id(), request.getTargetUrl());
+        String imageUrl = qrUtils.generateQrCodeAndUpload(account.id(), request.getTargetUrl(),request.getTableNumber());
         QrCodeResponse resp = QrCodeResponse.builder()
                 .qrCodeImageUrl(imageUrl)
                 .build();
@@ -117,6 +117,7 @@ public class MerchantController {
         var dtos = qrCodes.stream()
                 .map(qr -> QrCodeInfoResponse.builder()
                         .id(qr.getId())
+                        .diningTableId(qr.getDiningTableId())
                         .targetUrl(qr.getTargetUrl())
                         .imageUrl(qr.getImageUrl())
                         .createdAt(qr.getCreatedAt())
