@@ -16,4 +16,9 @@ public class QrCodeRequest {
             example = "https://your-frontend.com/merchantId/tableId/menus",
             required = true)
     private String targetUrl;
+
+    @Schema(description = "테이블 번호",
+            example = "1",
+            required = true)
+    private Integer tableNumber;
 }
