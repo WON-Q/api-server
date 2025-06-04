@@ -144,7 +144,8 @@ public class WebSecurityConfig {
                 antMatcher("/api/v1/merchant/{merchantId}/overview"),
                 antMatcher("/api/v1/orders/code/{orderCode}"),
                 antMatcher("/api/v1/orders/code/{orderCode}/verify"),
-                antMatcher("/api/orders/refund")
+                antMatcher("/api/orders/refund"),
+                antMatcher("/ws/**")
         );
         return requestMatchers.toArray(RequestMatcher[]::new);
     }
