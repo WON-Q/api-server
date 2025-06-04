@@ -1,5 +1,6 @@
 package com.fisa.wonq.order.service;
 
+import com.fisa.wonq.global.websocket.service.MerchantNotificationService;
 import com.fisa.wonq.merchant.domain.DiningTable;
 import com.fisa.wonq.merchant.domain.Menu;
 import com.fisa.wonq.merchant.domain.MenuOption;
@@ -58,6 +59,7 @@ public class OrderService {
     private final OrderRepository orderRepo;
     private final OrderMenuRepository orderMenuRepo;
     private final PgFeignClient pgFeignClient;
+    private final MerchantNotificationService notificationService;
 
     /**
      * 주문 생성(결제 요청)
@@ -367,7 +369,12 @@ public class OrderService {
 
         }
 
-        orderRepo.save(order);
+        Order savedOrder = orderRepo.save(order);
+        
+        // 결제 성공 시에만 주문 알림 전송
+        if(order.getOrderStatus() == OrderStatus.PAID) {
+            notificationService.sendNewOrderNotification(savedOrder);
+        }
 
         return OrderVerifyResponse.builder()
                 .orderCode(order.getOrderCode())
