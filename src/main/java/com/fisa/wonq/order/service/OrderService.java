@@ -373,7 +373,7 @@ public class OrderService {
         
         // 결제 성공 시에만 주문 알림 전송
         if(order.getOrderStatus() == OrderStatus.PAID) {
-            notificationService.sendNewOrderNotification(savedOrder);
+//            notificationService.sendNewOrderNotification(savedOrder);
         }
 
         return OrderVerifyResponse.builder()

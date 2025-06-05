@@ -4,6 +4,9 @@ import com.fisa.wonq.global.response.ApiResponse;
 import com.fisa.wonq.global.response.ResponseCode;
 import com.fisa.wonq.global.security.resolver.Account;
 import com.fisa.wonq.global.security.resolver.CurrentAccount;
+import com.fisa.wonq.global.websocket.dto.OrderNotificationMessage;
+import com.fisa.wonq.global.websocket.service.MerchantNotificationService;
+import com.fisa.wonq.merchant.domain.DiningTable;
 import com.fisa.wonq.order.controller.dto.req.ChangeOrderMenuStatusRequest;
 import com.fisa.wonq.order.controller.dto.req.OrderPrepareRequest;
 import com.fisa.wonq.order.controller.dto.req.OrderRequest;
@@ -11,6 +14,10 @@ import com.fisa.wonq.order.controller.dto.res.OrderDetailResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderPrepareResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderResponse;
 import com.fisa.wonq.order.controller.dto.res.OrderVerifyResponse;
+import com.fisa.wonq.order.domain.Order;
+import com.fisa.wonq.order.domain.enums.OrderStatus;
+import com.fisa.wonq.order.domain.enums.PaymentMethod;
+import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import com.fisa.wonq.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -30,6 +38,18 @@ import java.time.LocalDate;
 public class OrderController {
 
     private final OrderService orderService;
+
+    private final MerchantNotificationService merchantNotificationService;
+
+    @PostMapping("/test/websocket/notify")
+    public ResponseEntity<ApiResponse<Void>> testWebSocketNotification(
+            @RequestBody OrderNotificationMessage message
+    ) {
+        // 웹소켓 알림 전송
+        merchantNotificationService.sendNewOrderNotification(message);
+
+        return ResponseEntity.ok(ApiResponse.of(ResponseCode.SUCCESS));
+    }
 
     @PostMapping
     @Operation(summary = "주문 생성(결제 요청)",

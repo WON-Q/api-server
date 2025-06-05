@@ -2,6 +2,8 @@ package com.fisa.wonq.global.websocket.service;
 
 import com.fisa.wonq.global.websocket.dto.OrderNotificationMessage;
 import com.fisa.wonq.order.domain.Order;
+import com.fisa.wonq.order.domain.enums.OrderStatus;
+import com.fisa.wonq.order.domain.enums.PaymentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -22,30 +24,25 @@ public class MerchantNotificationService {
     /**
      * 새 주문 알림을 가맹점에 전송하는 메서드
      *
-     * @param order 주문 정보
      */
-    public void sendNewOrderNotification(Order order) {
+    public void sendNewOrderNotification(OrderNotificationMessage message) {
         try {
-            Long merchantId = order.getDiningTable().getMerchant().getMerchantId();
-            String destination = "/topic/merchant/" + merchantId + "/orders";
+            String destination = "/topic/merchant/" + message.getMerchantId() + "/orders";
             
-            log.debug("웹소켓 알림 준비 중: 목적지={}, 주문코드={}", destination, order.getOrderCode());
-            
-            OrderNotificationMessage message = OrderNotificationMessage.builder()
-                    .orderCode(order.getOrderCode())
-                    .merchantId(merchantId)
-                    .tableNumber(order.getDiningTable().getTableNumber())
-                    .orderStatus(order.getOrderStatus())
-                    .paymentStatus(order.getPaymentStatus())
-                    .totalAmount(order.getTotalAmount())
+            log.debug("웹소켓 알림 준비 중: 목적지={}", destination);
+            OrderNotificationMessage orderNotificationMessage = OrderNotificationMessage.builder()
+                    .orderCode(message.getOrderCode())
+                    .merchantId(message.getMerchantId())
+                    .tableNumber(message.getTableNumber())
+                    .totalAmount(message.getTotalAmount())
+                    .orderStatus(message.getOrderStatus())
+                    .paymentStatus(message.getPaymentStatus())
                     .timestamp(LocalDateTime.now())
-                    .message("새로운 주문이 접수되었습니다.")
+                    .message(message.getMessage())
                     .build();
             
             // 특정 가맹점에게 알림 전송
-            messagingTemplate.convertAndSend(destination, message);
-            
-            log.info("새 주문 알림 전송 완료: 목적지={}, 주문코드={}, 가맹점ID={}", destination, order.getOrderCode(), merchantId);
+            messagingTemplate.convertAndSend(destination, orderNotificationMessage);
 
         } catch (Exception e) {
             log.error("주문 알림 전송 실패: {}", e.getMessage(), e);
